@@ -18,9 +18,11 @@ I reviewed the design choices and kept the conflict detection intentionally simp
 
 ## Prompt Comparison
 
-| | Option A | Option B |
+**Status: Optional Challenge 5 (multi-model comparison) was not completed.** The table below records two prompts given to the *same* AI coding assistant (Codex) at different phases of the project — it is a useful record of how the prompts differed, but it is **not** a comparison across two different models/tools (e.g. Claude vs. Gemini, ChatGPT vs. Copilot) as Challenge 5 requires. Leaving this here for transparency instead of dressing it up as something it isn't; a real multi-model comparison would need a second assistant run on the same task and is not part of this submission.
+
+| | Prompt A | Prompt B |
 |-|----------|----------|
-| **Model / tool used** | Codex for implementation planning | Codex for testing review |
+| **Model / tool used** | Codex, used for implementation planning | Codex, used for testing review |
 | **Prompt** | "Build PawPal+ from the assignment phases and keep the backend separate from the UI." | "What should be tested for a pet scheduler with sorting, recurring tasks, and conflicts?" |
 | **Response summary** | Suggested creating `Owner`, `Pet`, `Task`, and `Scheduler`, then wiring Streamlit to those classes through session state. | Suggested tests for completion, adding tasks, sorting, recurrence, filtering, and conflict detection. |
 | **What was useful** | The phased approach kept the project from becoming one giant edit. | The test plan mapped directly to the assignment requirements. |
