@@ -16,9 +16,26 @@ I reviewed the design choices and kept the conflict detection intentionally simp
 
 ---
 
-## Prompt Comparison
+## Prompt Comparison (Optional Challenge 5)
 
-**Status: Optional Challenge 5 (multi-model comparison) was not completed.** The table below records two prompts given to the *same* AI coding assistant (Codex) at different phases of the project — it is a useful record of how the prompts differed, but it is **not** a comparison across two different models/tools (e.g. Claude vs. Gemini, ChatGPT vs. Copilot) as Challenge 5 requires. Leaving this here for transparency instead of dressing it up as something it isn't; a real multi-model comparison would need a second assistant run on the same task and is not part of this submission.
+**Task:** the assignment's own suggested complex algorithmic task — rescheduling logic for weekly recurring tasks. Specifically: `Task.next_occurrence()` originally always computed `due_date + 7 days` for a weekly task, even if it was completed several days late, which could create a "next" task that was already overdue. I asked two different AI models the same self-contained prompt (the `Task`/`next_occurrence` code plus the question of how to fix this) to compare their solutions.
+
+| | Model A: Codex | Model B: Claude |
+|-|-----------------|------------------|
+| **Model / tool used** | Codex (OpenAI coding agent) | Claude (Claude Code, this session) |
+| **Prompt** | Same prompt given to both: the current `Task`/`next_occurrence()` code, plus "how would you implement rescheduling logic for a late-completed weekly task — anchor to the original due date or the completion date?" | Same prompt as Model A. |
+| **Response summary** | Recommended a hybrid: keep the task anchored to its original cadence, but if completion is late, roll forward in `step` increments (`timedelta(weeks=1)`/`timedelta(days=1)`) past the completion date so the next occurrence always lands in the future. Provided a `next_occurrence(completed_on=...)` implementation using a `while` loop, and an updated `mark_task_complete()` signature. | Independently proposed the same core hybrid strategy (anchor to cadence, roll forward past late completions) before seeing Codex's code, since it's the standard pattern for recurring-reminder scheduling and avoids the schedule permanently drifting. Flagged two things Codex's answer didn't cover: (1) the fix is inert unless `Scheduler.mark_task_complete()` is also updated to pass `completed_on=date.today()` through to `next_occurrence()` — swapping in the new method alone changes nothing; (2) the `while` loop could be replaced with a closed-form `divmod` calculation, but for a pet-care app (nobody misses hundreds of weeks) the loop is clearer and just as correct, so not worth the complexity. |
+| **What was useful** | A concrete, directly runnable implementation with a clear explanation of the anchoring tradeoff (original due date vs. completion date vs. hybrid). | Caught that the algorithm alone wasn't enough — the call site (`mark_task_complete`) had to change too, or the fix would silently do nothing. Confirmed the loop-based approach didn't need to be replaced with more "clever" math. |
+| **What was flawed** | Didn't mention that the caller (`Scheduler.mark_task_complete()`) needed to be updated to actually pass a completion date — the sample code alone wouldn't change behavior if dropped in as-is. | No implementation-breaking flaw found; the main contribution was integration risk, not an alternative algorithm. |
+| **Final decision** | Adopted Codex's `next_occurrence(completed_on)` implementation (the roll-forward-past-late-completions loop) largely as written. | Adopted Claude's fix for the integration gap: `Scheduler.mark_task_complete()` now accepts an optional `completed_on` and defaults it to `date.today()` before calling `next_occurrence()`, so the late-completion behavior actually takes effect without every caller having to remember to pass a date. |
+
+**What changed in the codebase:** `Task.next_occurrence()` in `pawpal_system.py` now accepts `completed_on` and rolls the next date forward past it; `Scheduler.mark_task_complete()` passes `completed_on=completed_on or date.today()`. Covered by `test_weekly_recurrence_on_time_uses_original_cadence` and `test_weekly_recurrence_skips_ahead_when_completed_late` in `tests/test_pawpal.py`. `diagrams/uml_final.mmd` and the README's Smarter Scheduling table were updated to match.
+
+---
+
+## Additional Prompt Notes (single-tool, not the Challenge 5 submission)
+
+Earlier in the project I also compared two prompts given to the same tool (Codex) at different phases — useful for tracking how prompts evolved, but not a cross-model comparison, so it doesn't count toward Challenge 5 above.
 
 | | Prompt A | Prompt B |
 |-|----------|----------|

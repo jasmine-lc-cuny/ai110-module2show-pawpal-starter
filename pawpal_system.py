@@ -24,14 +24,19 @@ class Task:
         """Mark this task as complete."""
         self.completed = True
 
-    def next_occurrence(self) -> Task | None:
-        """Create the next task for daily or weekly recurring tasks."""
+    def next_occurrence(self, completed_on: date | None = None) -> Task | None:
+        """Create the next daily/weekly occurrence, skipping past dates a late completion already covers."""
         if self.frequency == "daily":
-            next_date = self.due_date + timedelta(days=1)
+            step = timedelta(days=1)
         elif self.frequency == "weekly":
-            next_date = self.due_date + timedelta(weeks=1)
+            step = timedelta(weeks=1)
         else:
             return None
+
+        anchor = completed_on or self.due_date
+        next_date = self.due_date + step
+        while next_date <= anchor:
+            next_date += step
 
         return Task(
             title=self.title,
@@ -223,8 +228,15 @@ class Scheduler:
 
         return warnings
 
-    def mark_task_complete(self, pet_name: str, task_title: str) -> Task | None:
-        """Complete a matching task and add its next recurring occurrence."""
+    def mark_task_complete(
+        self, pet_name: str, task_title: str, completed_on: date | None = None
+    ) -> Task | None:
+        """Complete a matching task and add its next recurring occurrence.
+
+        completed_on defaults to today; passing the actual completion date lets
+        a late completion skip straight to the next upcoming occurrence instead
+        of creating one that's already overdue.
+        """
         pet = self.owner.find_pet(pet_name)
         if pet is None:
             return None
@@ -232,7 +244,7 @@ class Scheduler:
         for task in pet.tasks:
             if task.title.lower() == task_title.lower() and not task.completed:
                 task.mark_complete()
-                next_task = task.next_occurrence()
+                next_task = task.next_occurrence(completed_on=completed_on or date.today())
                 if next_task is not None:
                     pet.add_task(next_task)
                 return task

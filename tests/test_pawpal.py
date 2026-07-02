@@ -63,6 +63,38 @@ def test_daily_recurrence_creates_tomorrows_task():
     assert pet.tasks[1].completed is False
 
 
+def test_weekly_recurrence_on_time_uses_original_cadence():
+    owner = Owner("Jordan")
+    pet = Pet("Mochi", "dog")
+    task = Task("Grooming", "10:00", 20, frequency="weekly")
+    pet.add_task(task)
+    owner.add_pet(pet)
+
+    Scheduler(owner).mark_task_complete("Mochi", "Grooming", completed_on=date.today())
+
+    assert pet.tasks[1].due_date == date.today() + timedelta(weeks=1)
+
+
+def test_weekly_recurrence_skips_ahead_when_completed_late():
+    owner = Owner("Jordan")
+    pet = Pet("Mochi", "dog")
+    three_weeks_ago = date.today() - timedelta(weeks=3)
+    task = Task("Grooming", "10:00", 20, frequency="weekly", due_date=three_weeks_ago)
+    pet.add_task(task)
+    owner.add_pet(pet)
+
+    completed = Scheduler(owner).mark_task_complete(
+        "Mochi", "Grooming", completed_on=date.today()
+    )
+
+    assert completed is task
+    next_task = pet.tasks[1]
+    # Naively adding 7 days to a 3-week-old due date would still land in the
+    # past; the fix should skip forward to the next date after "today".
+    assert next_task.due_date > date.today()
+    assert next_task.due_date == three_weeks_ago + timedelta(weeks=4)
+
+
 def test_conflict_detection_flags_duplicate_times():
     owner = Owner("Jordan")
     mochi = Pet("Mochi", "dog")
