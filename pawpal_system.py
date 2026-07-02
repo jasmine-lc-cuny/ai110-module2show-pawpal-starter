@@ -197,12 +197,16 @@ class Scheduler:
         """Create a scheduler for one owner."""
         self.owner = owner
 
-    def sort_by_time(self, tasks: list[tuple[Pet, Task]] | None = None):
+    def sort_by_time(
+        self, tasks: list[tuple[Pet, Task]] | None = None
+    ) -> list[tuple[Pet, Task]]:
         """Return tasks sorted chronologically by HH:MM time."""
         task_pairs = tasks if tasks is not None else self.owner.all_tasks()
         return sorted(task_pairs, key=lambda pair: pair[1].time)
 
-    def sort_by_priority_then_time(self, tasks: list[tuple[Pet, Task]] | None = None):
+    def sort_by_priority_then_time(
+        self, tasks: list[tuple[Pet, Task]] | None = None
+    ) -> list[tuple[Pet, Task]]:
         """Return tasks sorted by priority first, then time."""
         task_pairs = tasks if tasks is not None else self.owner.all_tasks()
         return sorted(
@@ -210,7 +214,9 @@ class Scheduler:
             key=lambda pair: (PRIORITY_ORDER.get(pair[1].priority, 99), pair[1].time),
         )
 
-    def filter_tasks(self, pet_name: str | None = None, completed: bool | None = None):
+    def filter_tasks(
+        self, pet_name: str | None = None, completed: bool | None = None
+    ) -> list[tuple[Pet, Task]]:
         """Filter tasks by pet name and completion status."""
         task_pairs = self.owner.all_tasks()
 
@@ -230,7 +236,7 @@ class Scheduler:
 
         return task_pairs
 
-    def detect_conflicts(self, tasks: list[tuple[Pet, Task]] | None = None):
+    def detect_conflicts(self, tasks: list[tuple[Pet, Task]] | None = None) -> list[str]:
         """Return warnings for tasks scheduled at the exact same date and time."""
         task_pairs = tasks if tasks is not None else self.owner.all_tasks()
         seen: dict[tuple[date, str], list[str]] = {}
