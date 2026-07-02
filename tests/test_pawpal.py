@@ -1,6 +1,15 @@
 from datetime import date, timedelta
 
-from pawpal_system import Owner, Pet, Scheduler, Task
+from pawpal_system import Owner, Pet, Scheduler, Task, task_type_icon
+
+
+def test_task_type_icon_varies_by_task_title():
+    assert task_type_icon("Morning walk") == "🐕"
+    assert task_type_icon("Heartworm medication") == "💊"
+    assert task_type_icon("Breakfast") == "🍖"
+    assert task_type_icon("Brush coat") == "🧼"
+    assert task_type_icon("Vet checkup") == "🏥"
+    assert task_type_icon("Something unrelated") == "🐾"
 
 
 def test_task_completion_marks_status():

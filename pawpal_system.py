@@ -7,6 +7,26 @@ from datetime import date, timedelta
 
 PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 
+# Keyword -> icon lookup used by Task.summary() to show a different emoji per
+# task type (walk, medication, feeding, grooming, vet visit), checked in order
+# so more specific keywords win. Falls back to a generic paw print.
+TASK_TYPE_ICONS: list[tuple[tuple[str, ...], str]] = [
+    (("walk", "hike", "play", "exercise"), "🐕"),
+    (("medic", "med", "pill", "heartworm", "vaccine", "dose"), "💊"),
+    (("feed", "breakfast", "lunch", "dinner", "meal", "snack"), "🍖"),
+    (("groom", "brush", "bath", "nail", "trim"), "🧼"),
+    (("vet", "appointment", "checkup", "exam"), "🏥"),
+]
+
+
+def task_type_icon(title: str) -> str:
+    """Return an emoji representing the kind of care task a title describes."""
+    lowered = title.lower()
+    for keywords, icon in TASK_TYPE_ICONS:
+        if any(keyword in lowered for keyword in keywords):
+            return icon
+    return "🐾"
+
 
 @dataclass
 class Task:
@@ -51,8 +71,9 @@ class Task:
         """Return a readable one-line description for CLI output."""
         pet_prefix = f"{pet_name}: " if pet_name else ""
         status = "✅ done" if self.completed else "⏳ open"
+        icon = task_type_icon(self.title)
         return (
-            f"{self.time} - {pet_prefix}{self.title} "
+            f"{icon} {self.time} - {pet_prefix}{self.title} "
             f"({self.duration_minutes} min, {self.priority}, "
             f"{self.frequency}, {self.due_date.isoformat()}, {status})"
         )

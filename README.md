@@ -17,6 +17,7 @@ verified through `main.py` and pytest before being connected to the UI in
 - Surface today's single next urgent task and a top-3 priority shortlist.
 - Use a Streamlit interface backed by `st.session_state` so pets and tasks stay available during the browser session.
 - Persist all pets and tasks to `data.json` so they survive between application runs.
+- Show a different emoji per task type (walk, medication, feeding, grooming, vet) plus color-coded status messages in the Streamlit UI.
 
 ## Setup
 
@@ -44,36 +45,36 @@ Example output from running `python main.py`:
 PawPal+ schedule for Jordan
 ================================
 📅 Today's Schedule
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  🧼 08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 
 High Priority First
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🧼 08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
 
 🚨 Next Urgent Task
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
 
 ⭐ Today's Top 3 Priorities
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 
 ⚠️ Conflict Warnings
   Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat
 
 🔁 Recurring Task Created
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, ⏳ open)
 
 💾 Saved to data.json and reloaded a fresh Owner from disk
 Reloaded Schedule (from data.json)
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🧼 08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 ```
 
 ## Smarter Scheduling
@@ -106,19 +107,19 @@ python -m pytest
 
 The tests cover task completion, task addition, chronological sorting,
 filtering, daily recurrence, late-completion recurrence skip-ahead, conflict
-detection, next-urgent-task selection, top-priority ranking, and a JSON
-save/load round trip.
+detection, next-urgent-task selection, top-priority ranking, per-task-type
+icon selection, and a JSON save/load round trip.
 
 ```text
 ============================= test session starts ==============================
 platform linux -- Python 3.12.1, pytest-9.1.1, pluggy-1.6.0
 rootdir: /workspaces/ai110-module2show-pawpal-starter
 plugins: anyio-4.14.1
-collected 12 items
+collected 13 items
 
-tests/test_pawpal.py ............                                        [100%]
+tests/test_pawpal.py .............                                       [100%]
 
-============================== 12 passed in 0.02s ==============================
+============================== 13 passed in 0.04s ==============================
 ```
 
 Confidence Level: 4/5 stars. The main happy paths and required scheduling
@@ -140,36 +141,36 @@ Sample CLI output from `python main.py` (same run shown in the Sample Output sec
 PawPal+ schedule for Jordan
 ================================
 📅 Today's Schedule
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  🧼 08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 
 High Priority First
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🧼 08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
 
 🚨 Next Urgent Task
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
 
 ⭐ Today's Top 3 Priorities
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 
 ⚠️ Conflict Warnings
   Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat
 
 🔁 Recurring Task Created
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, ⏳ open)
+  🐕 08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, ⏳ open)
 
 💾 Saved to data.json and reloaded a fresh Owner from disk
 Reloaded Schedule (from data.json)
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+  🍖 07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  🧼 08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  💊 12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 ```
 
 ## Optional Challenges
@@ -179,7 +180,7 @@ Reloaded Schedule (from data.json)
 | 1. Advanced algorithmic capability | ✅ Done | `Scheduler.next_urgent_task()` and `Scheduler.top_priorities(n)` add a distinct ranking capability beyond the four base requirements. See the "Agent Workflow" section in `ai_interactions.md`. |
 | 2. Data persistence (JSON) | ✅ Done | `Owner.save_to_json()`/`Owner.load_from_json()` (see Data Persistence section above); pets/tasks survive both `main.py` runs and Streamlit restarts via `data.json`. |
 | 3. Advanced priority scheduling | ✅ Done | `Task.priority` (`low`/`medium`/`high`) plus `Scheduler.sort_by_priority_then_time()`; see "High Priority First" in the Sample Output above. |
-| 4. Professional UI/output formatting | ✅ Done | `Task.summary()` uses ✅/⏳ status icons and `main.py` section headers use emoji (📅 🚨 ⭐ ⚠️ 🔁); no external formatting library used. |
+| 4. Professional UI/output formatting | ✅ Done | Two of the three suggested formats, both real: **(a) emojis per task type** — `task_type_icon()` in `pawpal_system.py` maps task-title keywords to a different icon (🐕 walk, 💊 medication, 🍖 feeding, 🧼 grooming, 🏥 vet), used by `Task.summary()` (CLI) and the `Type` column in `app.py`'s `task_rows()` (Streamlit table). Plus `main.py` section headers (📅 🚨 ⭐ ⚠️ 🔁) and ✅/⏳ status icons. **(b) color-coded status indicators** — the Streamlit UI already used `st.success()`/`st.warning()`/`st.info()` for pet/task confirmations, conflict warnings, and empty states; Streamlit renders each with a distinct background color (green/yellow/blue), which is genuine color coding, not just text. No external formatting library (e.g. `tabulate`) was used. |
 | 5. Multi-model prompt comparison | ✅ Done | Compared Codex vs. Claude on rescheduling late-completed weekly tasks; see the "Prompt Comparison" section in `ai_interactions.md`. The winning hybrid approach was adopted into `Task.next_occurrence()`/`Scheduler.mark_task_complete()`. |
 
 ## Architecture

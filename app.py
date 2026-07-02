@@ -2,7 +2,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from pawpal_system import Owner, Pet, Scheduler, Task
+from pawpal_system import Owner, Pet, Scheduler, Task, task_type_icon
 
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
@@ -24,6 +24,7 @@ def task_rows(task_pairs):
     """Convert scheduler task pairs into table-friendly dictionaries."""
     return [
         {
+            "Type": task_type_icon(task.title),
             "Time": task.time,
             "Pet": pet.name,
             "Task": task.title,
@@ -31,7 +32,7 @@ def task_rows(task_pairs):
             "Priority": task.priority,
             "Frequency": task.frequency,
             "Due Date": task.due_date.isoformat(),
-            "Status": "Done" if task.completed else "Open",
+            "Status": "✅ Done" if task.completed else "⏳ Open",
         }
         for pet, task in task_pairs
     ]
