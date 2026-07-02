@@ -56,6 +56,24 @@ def test_filter_tasks_by_pet_and_status():
     assert filtered == [(luna, open_task)]
 
 
+def test_sort_by_time_handles_pet_with_no_tasks():
+    owner = Owner("Jordan")
+    owner.add_pet(Pet("Mochi", "dog"))
+
+    assert Scheduler(owner).sort_by_time() == []
+
+
+def test_filter_tasks_returns_empty_list_when_pet_name_has_no_match():
+    owner = Owner("Jordan")
+    pet = Pet("Mochi", "dog")
+    pet.add_task(Task("Morning walk", "08:00", 30))
+    owner.add_pet(pet)
+
+    filtered = Scheduler(owner).filter_tasks(pet_name="Nonexistent")
+
+    assert filtered == []
+
+
 def test_daily_recurrence_creates_tomorrows_task():
     owner = Owner("Jordan")
     pet = Pet("Mochi", "dog")

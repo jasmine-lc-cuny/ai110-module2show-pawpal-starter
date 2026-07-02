@@ -131,21 +131,22 @@ Run the full test suite:
 python -m pytest
 ```
 
-The tests cover task completion, task addition, chronological sorting,
-filtering, daily recurrence, late-completion recurrence skip-ahead, conflict
-detection, next-urgent-task selection, top-priority ranking, per-task-type
-icon selection, and a JSON save/load round trip.
+The tests cover task completion, task addition, chronological sorting (plus
+an empty-list edge case), filtering (including a no-match edge case), daily
+recurrence, late-completion recurrence skip-ahead, conflict detection,
+next-urgent-task selection, top-priority ranking, per-task-type icon
+selection, and a JSON save/load round trip.
 
 ```text
 ============================= test session starts ==============================
 platform linux -- Python 3.12.1, pytest-9.1.1, pluggy-1.6.0
 rootdir: /workspaces/ai110-module2show-pawpal-starter
 plugins: anyio-4.14.1
-collected 13 items
+collected 15 items
 
-tests/test_pawpal.py .............                                       [100%]
+tests/test_pawpal.py ...............                                     [100%]
 
-============================== 13 passed in 0.04s ==============================
+============================== 15 passed in 0.02s ==============================
 ```
 
 Confidence Level: 4/5 stars. The main happy paths and required scheduling
