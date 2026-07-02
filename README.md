@@ -150,6 +150,16 @@ High Priority First
   08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, ⏳ open)
 ```
 
+## Optional Challenges
+
+| Challenge | Status | Notes |
+|---|---|---|
+| 1. Advanced algorithmic capability | ✅ Done | `Scheduler.next_urgent_task()` and `Scheduler.top_priorities(n)` add a distinct ranking capability beyond the four base requirements. See the "Agent Workflow" section in `ai_interactions.md`. |
+| 2. Data persistence (JSON) | ❌ Not attempted | No `save_to_json`/`load_from_json`; data only lives for the process/session lifetime. |
+| 3. Advanced priority scheduling | ✅ Done | `Task.priority` (`low`/`medium`/`high`) plus `Scheduler.sort_by_priority_then_time()`; see "High Priority First" in the Sample Output above. |
+| 4. Professional UI/output formatting | ✅ Done | `Task.summary()` uses ✅/⏳ status icons and `main.py` section headers use emoji (📅 🚨 ⭐ ⚠️ 🔁); no external formatting library used. |
+| 5. Multi-model prompt comparison | ❌ Not attempted | `ai_interactions.md` documents a same-tool prompt comparison, not a true cross-model comparison. Would need a second assistant (e.g. Gemini/ChatGPT) run on the same prompt. |
+
 ## Architecture
 
 - Draft UML: `diagrams/uml.mmd`
