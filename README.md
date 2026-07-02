@@ -16,6 +16,7 @@ verified through `main.py` and pytest before being connected to the UI in
 - Mark tasks complete and automatically create the next daily or weekly task.
 - Surface today's single next urgent task and a top-3 priority shortlist.
 - Use a Streamlit interface backed by `st.session_state` so pets and tasks stay available during the browser session.
+- Persist all pets and tasks to `data.json` so they survive between application runs.
 
 ## Setup
 
@@ -67,6 +68,12 @@ High Priority First
 
 🔁 Recurring Task Created
   08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, ⏳ open)
+
+💾 Saved to data.json and reloaded a fresh Owner from disk
+Reloaded Schedule (from data.json)
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 ```
 
 ## Smarter Scheduling
@@ -81,6 +88,14 @@ High Priority First
 | Next urgent task | `Scheduler.next_urgent_task()` | Returns today's single highest-priority, earliest-time open task (or `None`). |
 | Top priorities | `Scheduler.top_priorities(n=3)` | Returns today's top `n` open tasks ranked by priority then time. |
 
+## Data Persistence
+
+PawPal+ saves its state to `data.json` so pets and tasks survive between runs, instead of resetting every time the app or script restarts.
+
+- **What was added:** `Task.to_dict()`/`Task.from_dict()`, `Pet.to_dict()`/`Pet.from_dict()`, and `Owner.to_dict()`/`Owner.from_dict()` convert the object graph to and from plain dictionaries (dates are stored as ISO strings). `Owner.save_to_json(path)` writes that dictionary to a JSON file with `json.dump`; `Owner.load_from_json(path)` (a classmethod) reads it back and rebuilds a full `Owner` → `Pet` → `Task` object graph.
+- **Files modified:** `pawpal_system.py` (serialization methods), `main.py` (demonstrates a save → reload round trip at the end of the CLI run, see Sample Output above), `app.py` (loads `data.json` on first load of a session if it exists, and auto-saves after every render so pet/task changes survive an app restart), `.gitignore` (excludes the generated `data.json` so runtime data isn't committed), `tests/test_pawpal.py` (`test_save_and_load_json_round_trip` verifies a full save/reload cycle preserves pet details and task fields, including dates and recurrence).
+- **Workflow:** in the CLI, `python main.py` builds the demo data, mutates it, saves it to `data.json`, then reloads a brand-new `Owner` straight from that file to prove the round trip works. In the Streamlit app, adding a pet, adding a task, or completing a task immediately persists to `data.json`; reloading the page (a fresh Streamlit session) reads that file back in instead of starting empty.
+
 ## Testing PawPal+
 
 Run the full test suite:
@@ -91,18 +106,18 @@ python -m pytest
 
 The tests cover task completion, task addition, chronological sorting,
 filtering, daily recurrence, conflict detection, next-urgent-task selection,
-and top-priority ranking.
+top-priority ranking, and a JSON save/load round trip.
 
 ```text
 ============================= test session starts ==============================
 platform linux -- Python 3.12.1, pytest-9.1.1, pluggy-1.6.0
 rootdir: /workspaces/ai110-module2show-pawpal-starter
 plugins: anyio-4.14.1
-collected 9 items
+collected 10 items
 
-tests/test_pawpal.py .........                                           [100%]
+tests/test_pawpal.py ..........                                          [100%]
 
-============================== 9 passed in 0.02s ===============================
+============================== 10 passed in 0.02s ===============================
 ```
 
 Confidence Level: 4/5 stars. The main happy paths and required scheduling
@@ -148,6 +163,12 @@ High Priority First
 
 🔁 Recurring Task Created
   08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, ⏳ open)
+
+💾 Saved to data.json and reloaded a fresh Owner from disk
+Reloaded Schedule (from data.json)
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 ```
 
 ## Optional Challenges
@@ -155,7 +176,7 @@ High Priority First
 | Challenge | Status | Notes |
 |---|---|---|
 | 1. Advanced algorithmic capability | ✅ Done | `Scheduler.next_urgent_task()` and `Scheduler.top_priorities(n)` add a distinct ranking capability beyond the four base requirements. See the "Agent Workflow" section in `ai_interactions.md`. |
-| 2. Data persistence (JSON) | ❌ Not attempted | No `save_to_json`/`load_from_json`; data only lives for the process/session lifetime. |
+| 2. Data persistence (JSON) | ✅ Done | `Owner.save_to_json()`/`Owner.load_from_json()` (see Data Persistence section above); pets/tasks survive both `main.py` runs and Streamlit restarts via `data.json`. |
 | 3. Advanced priority scheduling | ✅ Done | `Task.priority` (`low`/`medium`/`high`) plus `Scheduler.sort_by_priority_then_time()`; see "High Priority First" in the Sample Output above. |
 | 4. Professional UI/output formatting | ✅ Done | `Task.summary()` uses ✅/⏳ status icons and `main.py` section headers use emoji (📅 🚨 ⭐ ⚠️ 🔁); no external formatting library used. |
 | 5. Multi-model prompt comparison | ❌ Not attempted | `ai_interactions.md` documents a same-tool prompt comparison, not a true cross-model comparison. Would need a second assistant (e.g. Gemini/ChatGPT) run on the same prompt. |

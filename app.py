@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import streamlit as st
 
 from pawpal_system import Owner, Pet, Scheduler, Task
@@ -5,11 +7,16 @@ from pawpal_system import Owner, Pet, Scheduler, Task
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
 
+DATA_PATH = Path("data.json")
+
 
 def get_owner():
-    """Return the session's owner object, creating it once if needed."""
+    """Return the session's owner, loading it from data.json once if needed."""
     if "owner" not in st.session_state:
-        st.session_state.owner = Owner("Jordan")
+        if DATA_PATH.exists():
+            st.session_state.owner = Owner.load_from_json(str(DATA_PATH))
+        else:
+            st.session_state.owner = Owner("Jordan")
     return st.session_state.owner
 
 
@@ -142,3 +149,6 @@ if owner.pets:
             st.rerun()
     else:
         st.info("All tasks are complete.")
+
+owner.save_to_json(str(DATA_PATH))
+st.caption(f"Data is auto-saved to `{DATA_PATH}` after every change, so it persists between app runs.")

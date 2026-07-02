@@ -73,6 +73,14 @@ def main():
         if pet.name == "Mochi" and task.title == "Morning walk" and task.due_date > date.today()
     ]
     print_schedule("🔁 Recurring Task Created", next_walks)
+    print()
+
+    data_path = "data.json"
+    owner.save_to_json(data_path)
+    reloaded_owner = Owner.load_from_json(data_path)
+    reloaded_scheduler = Scheduler(reloaded_owner)
+    print(f"💾 Saved to {data_path} and reloaded a fresh Owner from disk")
+    print_schedule("Reloaded Schedule (from data.json)", reloaded_scheduler.todays_schedule())
 
 
 if __name__ == "__main__":

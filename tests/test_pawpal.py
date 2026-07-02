@@ -113,3 +113,25 @@ def test_top_priorities_returns_top_n_ranked_tasks():
     top_two = Scheduler(owner).top_priorities(2)
 
     assert [task.title for _, task in top_two] == ["Breakfast", "Medication"]
+
+
+def test_save_and_load_json_round_trip(tmp_path):
+    owner = Owner("Jordan")
+    pet = Pet("Mochi", "dog", age=4)
+    pet.add_task(
+        Task("Morning walk", "08:00", 30, priority="high", frequency="daily")
+    )
+    owner.add_pet(pet)
+
+    json_path = tmp_path / "data.json"
+    owner.save_to_json(str(json_path))
+    loaded = Owner.load_from_json(str(json_path))
+
+    assert loaded.name == "Jordan"
+    assert len(loaded.pets) == 1
+    loaded_pet = loaded.pets[0]
+    assert loaded_pet.name == "Mochi"
+    assert loaded_pet.age == 4
+    assert loaded_pet.tasks[0].title == "Morning walk"
+    assert loaded_pet.tasks[0].frequency == "daily"
+    assert loaded_pet.tasks[0].due_date == pet.tasks[0].due_date

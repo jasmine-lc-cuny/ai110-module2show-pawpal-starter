@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
@@ -51,6 +52,31 @@ class Task:
             f"{self.frequency}, {self.due_date.isoformat()}, {status})"
         )
 
+    def to_dict(self) -> dict:
+        """Convert this task to a JSON-serializable dictionary."""
+        return {
+            "title": self.title,
+            "time": self.time,
+            "duration_minutes": self.duration_minutes,
+            "priority": self.priority,
+            "frequency": self.frequency,
+            "due_date": self.due_date.isoformat(),
+            "completed": self.completed,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Task:
+        """Rebuild a Task from a dictionary produced by to_dict()."""
+        return cls(
+            title=data["title"],
+            time=data["time"],
+            duration_minutes=data["duration_minutes"],
+            priority=data["priority"],
+            frequency=data["frequency"],
+            due_date=date.fromisoformat(data["due_date"]),
+            completed=data["completed"],
+        )
+
 
 @dataclass
 class Pet:
@@ -68,6 +94,25 @@ class Pet:
     def incomplete_tasks(self) -> list[Task]:
         """Return this pet's incomplete tasks."""
         return [task for task in self.tasks if not task.completed]
+
+    def to_dict(self) -> dict:
+        """Convert this pet and its tasks to a JSON-serializable dictionary."""
+        return {
+            "name": self.name,
+            "species": self.species,
+            "age": self.age,
+            "tasks": [task.to_dict() for task in self.tasks],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Pet:
+        """Rebuild a Pet (and its tasks) from a dictionary produced by to_dict()."""
+        return cls(
+            name=data["name"],
+            species=data["species"],
+            age=data["age"],
+            tasks=[Task.from_dict(task_data) for task_data in data["tasks"]],
+        )
 
 
 @dataclass
@@ -91,6 +136,32 @@ class Owner:
     def all_tasks(self) -> list[tuple[Pet, Task]]:
         """Return every task paired with the pet it belongs to."""
         return [(pet, task) for pet in self.pets for task in pet.tasks]
+
+    def to_dict(self) -> dict:
+        """Convert this owner, their pets, and all tasks to a JSON-serializable dictionary."""
+        return {
+            "name": self.name,
+            "pets": [pet.to_dict() for pet in self.pets],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Owner:
+        """Rebuild an Owner (and their pets/tasks) from a dictionary produced by to_dict()."""
+        return cls(
+            name=data["name"],
+            pets=[Pet.from_dict(pet_data) for pet_data in data["pets"]],
+        )
+
+    def save_to_json(self, path: str) -> None:
+        """Save this owner's pets and tasks to a JSON file at path."""
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(self.to_dict(), file, indent=2)
+
+    @classmethod
+    def load_from_json(cls, path: str) -> Owner:
+        """Load an owner's pets and tasks from a JSON file at path."""
+        with open(path, "r", encoding="utf-8") as file:
+            return cls.from_dict(json.load(file))
 
 
 class Scheduler:
