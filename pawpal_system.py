@@ -252,12 +252,7 @@ class Scheduler:
     def mark_task_complete(
         self, pet_name: str, task_title: str, completed_on: date | None = None
     ) -> Task | None:
-        """Complete a matching task and add its next recurring occurrence.
-
-        completed_on defaults to today; passing the actual completion date lets
-        a late completion skip straight to the next upcoming occurrence instead
-        of creating one that's already overdue.
-        """
+        """Complete a matching task and add its next recurring occurrence."""
         pet = self.owner.find_pet(pet_name)
         if pet is None:
             return None
@@ -265,6 +260,9 @@ class Scheduler:
         for task in pet.tasks:
             if task.title.lower() == task_title.lower() and not task.completed:
                 task.mark_complete()
+                # Defaults completed_on to today so a late completion skips
+                # straight to the next upcoming occurrence instead of one
+                # that's already overdue.
                 next_task = task.next_occurrence(completed_on=completed_on or date.today())
                 if next_task is not None:
                     pet.add_task(next_task)

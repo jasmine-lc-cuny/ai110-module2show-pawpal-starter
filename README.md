@@ -62,6 +62,13 @@ PawPal+ schedule for Jordan
 | 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 | 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
 
+🐾 Mochi's Open Tasks
+
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+
 🚨 Next Urgent Task
 
 | Time  | Pet  | Task         | Duration | Priority | Frequency | Due Date   | Status |
@@ -102,7 +109,7 @@ Reloaded Schedule (from data.json)
 |---------|-----------|-------|
 | Task sorting | `Scheduler.sort_by_time()` | Sorts tasks chronologically using `HH:MM` strings. |
 | Priority sorting | `Scheduler.sort_by_priority_then_time()` | Sorts high priority first, then by time. |
-| Filtering | `Scheduler.filter_tasks()` | Filters by pet name and/or completion status. |
+| Filtering | `Scheduler.filter_tasks()` | Filters by pet name and/or completion status; see "🐾 Mochi's Open Tasks" in the Sample Output above. |
 | Conflict handling | `Scheduler.detect_conflicts()` | Returns warning strings for exact same date/time matches. |
 | Recurring tasks | `Task.next_occurrence(completed_on)`, `Scheduler.mark_task_complete()` | Creates the next daily or weekly task after completion. Anchors to the original cadence, but if completion is late it skips forward until the next occurrence actually lands in the future instead of creating an already-overdue task. See `ai_interactions.md` for the two-model design comparison behind this. |
 | Next urgent task | `Scheduler.next_urgent_task()` | Returns today's single highest-priority, earliest-time open task (or `None`). |
@@ -176,6 +183,13 @@ PawPal+ schedule for Jordan
 | 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
 | 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 | 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+
+🐾 Mochi's Open Tasks
+
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 🚨 Next Urgent Task
 

@@ -72,6 +72,11 @@ def main():
         scheduler.sort_by_priority_then_time(scheduler.todays_schedule()),
     )
 
+    print_schedule(
+        "🐾 Mochi's Open Tasks",
+        scheduler.filter_tasks(pet_name="Mochi", completed=False),
+    )
+
     urgent = scheduler.next_urgent_task()
     print_schedule("🚨 Next Urgent Task", [urgent] if urgent else [])
 
