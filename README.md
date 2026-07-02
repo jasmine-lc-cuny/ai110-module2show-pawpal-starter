@@ -41,31 +41,23 @@ Example output from running `python main.py`:
 ```text
 PawPal+ schedule for Jordan
 ================================
-📅 Today's Schedule
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-01, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-01, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-01, ⏳ open)
+Today's Schedule
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, open)
 
 High Priority First
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-01, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-01, ⏳ open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-01, ⏳ open)
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, open)
 
-🚨 Next Urgent Task
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
+Conflict Warnings
+  Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat
 
-⭐ Today's Top 3 Priorities
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-01, ⏳ open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-01, ⏳ open)
-
-⚠️ Conflict Warnings
-  Conflict on 2026-07-01 at 08:00: Mochi: Morning walk, Luna: Brush coat
-
-🔁 Recurring Task Created
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+Recurring Task Created
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, open)
 ```
 
 ## Smarter Scheduling
@@ -113,6 +105,30 @@ time zones, overlapping durations, and saved data across app restarts.
 4. PawPal+ displays the schedule as a table sorted by time or priority.
 5. The user filters tasks by pet/status and sees conflict warnings when two open tasks share the same date and time.
 6. When the user marks a daily or weekly task complete, PawPal+ creates the next occurrence automatically.
+
+Sample CLI output from `python main.py` (same run shown in the Sample Output section above):
+
+```text
+PawPal+ schedule for Jordan
+================================
+Today's Schedule
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, open)
+
+High Priority First
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, open)
+
+Conflict Warnings
+  Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat
+
+Recurring Task Created
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-03, open)
+```
 
 ## Architecture
 

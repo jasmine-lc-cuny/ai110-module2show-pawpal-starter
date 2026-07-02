@@ -30,9 +30,13 @@ One tradeoff is that conflict detection only checks for exact same date and time
 
 I used AI as a planning and implementation teammate. Codex helped turn the assignment requirements into a phased plan, create the UML and class skeletons, implement the OOP backend, wire the Streamlit UI, write tests, and update the documentation. The most helpful prompts were specific and phase-based, such as asking how the `Scheduler` should retrieve all tasks from an `Owner` or how to keep Streamlit objects in `st.session_state`. Keeping design, implementation, testing, and documentation separate made the project easier to review.
 
+**Which AI features were most effective?** Agent/edit mode was the most effective feature for this project — being able to point it at `pawpal_system.py`, `app.py`, and `tests/test_pawpal.py` together let it make coordinated changes (like adding `due_date`/`frequency` to `Task` and updating every place that constructs a `Task`) in one pass instead of me manually keeping files in sync. Plain chat was more useful for narrower questions, like asking for a `timedelta`-based recurrence formula or a cleaner way to format the CLI schedule.
+
+**How did separate chat sessions help?** Starting a new session for Phase 4 (algorithms) and Phase 5 (tests) instead of continuing the Phase 1-2 session kept each conversation focused on one concern. It meant the AI wasn't trying to reconcile "skeleton design" advice with "test coverage" advice at the same time, and it made it easier for me to review each phase's output against just that phase's requirements before moving on.
+
 **b. Judgment and verification**
 
-One suggestion I modified was to keep conflict detection lightweight instead of building a full calendar overlap engine. A more advanced overlap algorithm would be more realistic, but it would also make the code harder to explain for this assignment. I verified the final logic with a CLI demo, automated pytest cases, and a Streamlit startup check. I also reviewed the files manually to make sure the UML, README, and reflection matched the actual code.
+One suggestion I modified was to keep conflict detection lightweight instead of building a full calendar overlap engine. A more advanced overlap algorithm would be more realistic, but it would also make the code harder to explain for this assignment. I also caught and reverted a case where AI-drafted README output (originally written against an experimental branch with emoji formatting and extra "urgent task" sections) had drifted from what `main.py` actually prints — I had to re-run the script and replace the pasted output with the real output before trusting the README as evidence the system works. I verified the final logic with a CLI demo, automated pytest cases, and a Streamlit startup check. I also reviewed the files manually to make sure the UML, README, and reflection matched the actual code.
 
 ---
 
