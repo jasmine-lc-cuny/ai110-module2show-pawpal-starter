@@ -84,7 +84,7 @@ Reloaded Schedule (from data.json)
 | Priority sorting | `Scheduler.sort_by_priority_then_time()` | Sorts high priority first, then by time. |
 | Filtering | `Scheduler.filter_tasks()` | Filters by pet name and/or completion status. |
 | Conflict handling | `Scheduler.detect_conflicts()` | Returns warning strings for exact same date/time matches. |
-| Recurring tasks | `Task.next_occurrence()`, `Scheduler.mark_task_complete()` | Creates the next daily or weekly task after completion. |
+| Recurring tasks | `Task.next_occurrence(completed_on)`, `Scheduler.mark_task_complete()` | Creates the next daily or weekly task after completion. Anchors to the original cadence, but if completion is late it skips forward until the next occurrence actually lands in the future instead of creating an already-overdue task. See `ai_interactions.md` for the two-model design comparison behind this. |
 | Next urgent task | `Scheduler.next_urgent_task()` | Returns today's single highest-priority, earliest-time open task (or `None`). |
 | Top priorities | `Scheduler.top_priorities(n=3)` | Returns today's top `n` open tasks ranked by priority then time. |
 
@@ -105,19 +105,20 @@ python -m pytest
 ```
 
 The tests cover task completion, task addition, chronological sorting,
-filtering, daily recurrence, conflict detection, next-urgent-task selection,
-top-priority ranking, and a JSON save/load round trip.
+filtering, daily recurrence, late-completion recurrence skip-ahead, conflict
+detection, next-urgent-task selection, top-priority ranking, and a JSON
+save/load round trip.
 
 ```text
 ============================= test session starts ==============================
 platform linux -- Python 3.12.1, pytest-9.1.1, pluggy-1.6.0
 rootdir: /workspaces/ai110-module2show-pawpal-starter
 plugins: anyio-4.14.1
-collected 10 items
+collected 12 items
 
-tests/test_pawpal.py ..........                                          [100%]
+tests/test_pawpal.py ............                                        [100%]
 
-============================== 10 passed in 0.02s ===============================
+============================== 12 passed in 0.02s ==============================
 ```
 
 Confidence Level: 4/5 stars. The main happy paths and required scheduling
@@ -179,7 +180,7 @@ Reloaded Schedule (from data.json)
 | 2. Data persistence (JSON) | ✅ Done | `Owner.save_to_json()`/`Owner.load_from_json()` (see Data Persistence section above); pets/tasks survive both `main.py` runs and Streamlit restarts via `data.json`. |
 | 3. Advanced priority scheduling | ✅ Done | `Task.priority` (`low`/`medium`/`high`) plus `Scheduler.sort_by_priority_then_time()`; see "High Priority First" in the Sample Output above. |
 | 4. Professional UI/output formatting | ✅ Done | `Task.summary()` uses ✅/⏳ status icons and `main.py` section headers use emoji (📅 🚨 ⭐ ⚠️ 🔁); no external formatting library used. |
-| 5. Multi-model prompt comparison | ❌ Not attempted | `ai_interactions.md` documents a same-tool prompt comparison, not a true cross-model comparison. Would need a second assistant (e.g. Gemini/ChatGPT) run on the same prompt. |
+| 5. Multi-model prompt comparison | ✅ Done | Compared Codex vs. Claude on rescheduling late-completed weekly tasks; see the "Prompt Comparison" section in `ai_interactions.md`. The winning hybrid approach was adopted into `Task.next_occurrence()`/`Scheduler.mark_task_complete()`. |
 
 ## Architecture
 
