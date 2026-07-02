@@ -2,12 +2,41 @@ from pathlib import Path
 
 import streamlit as st
 
-from pawpal_system import Owner, Pet, Scheduler, Task, format_time_12h, task_type_icon
+from pawpal_system import (
+    Owner,
+    Pet,
+    Scheduler,
+    Task,
+    format_time_12h,
+    pet_species_icon,
+    task_type_icon,
+)
 
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
 
 DATA_PATH = Path("data.json")
+
+# Common care tasks offered in the "Schedule a Task" dropdown, covering every
+# category task_type_icon() recognizes, plus "Other (custom)" for anything else.
+COMMON_TASK_TITLES = [
+    "Morning Walk",
+    "Afternoon Walk",
+    "Evening Walk",
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Give Medication",
+    "Heartworm Prevention",
+    "Vet Appointment",
+    "Brush Coat",
+    "Wash / Bath",
+    "Hair Cut",
+    "Trim Nails",
+    "Ear Cleaning",
+    "Teeth Brushing",
+    "Playtime",
+]
 
 
 def get_owner():
@@ -26,7 +55,7 @@ def task_rows(task_pairs):
         {
             "Type": task_type_icon(task.title),
             "Time": format_time_12h(task.time),
-            "Pet": pet.name,
+            "Pet": f"{pet_species_icon(pet.species)} {pet.name}",
             "Species": pet.species,
             "Task": task.title,
             "Duration": task.duration_minutes,
@@ -71,7 +100,11 @@ with left:
     if owner.pets:
         st.table(
             [
-                {"Name": pet.name, "Species": pet.species, "Age": pet.age}
+                {
+                    "Name": f"{pet_species_icon(pet.species)} {pet.name}",
+                    "Species": pet.species,
+                    "Age": pet.age,
+                }
                 for pet in owner.pets
             ]
         )
@@ -79,7 +112,7 @@ with left:
         pet_to_delete = st.selectbox(
             "Delete a pet",
             owner.pets,
-            format_func=lambda pet: f"{pet.name} ({pet.species}, age {pet.age}, {len(pet.tasks)} task(s))",
+            format_func=lambda pet: f"{pet_species_icon(pet.species)} {pet.name} ({pet.species}, age {pet.age}, {len(pet.tasks)} task(s))",
         )
         if st.button("Delete pet"):
             owner.remove_pet(pet_to_delete)
@@ -90,7 +123,7 @@ with left:
         pet_to_edit = st.selectbox(
             "Pet to edit",
             owner.pets,
-            format_func=lambda pet: pet.name,
+            format_func=lambda pet: f"{pet_species_icon(pet.species)} {pet.name}",
             key="edit_pet_select",
         )
         with st.form("edit_pet_form"):
@@ -122,9 +155,20 @@ with right:
     if not owner.pets:
         st.warning("Add at least one pet before scheduling tasks.")
     else:
+        # Outside the form so picking "Other (custom)" immediately reveals the
+        # text field below — widgets inside st.form don't trigger a rerun
+        # until the form is submitted, so this couldn't live in there.
+        title_choice = st.selectbox("Task title", COMMON_TASK_TITLES + ["Other (custom)"])
+
         with st.form("add_task_form", clear_on_submit=True):
-            selected_pet = st.selectbox("Pet", [pet.name for pet in owner.pets])
-            title = st.text_input("Task title", value="Morning walk")
+            selected_pet = st.selectbox(
+                "Pet", owner.pets, format_func=lambda pet: f"{pet_species_icon(pet.species)} {pet.name}"
+            )
+            custom_title = (
+                st.text_input("Custom task title")
+                if title_choice == "Other (custom)"
+                else None
+            )
 
             st.write("Time")
             hour_col, minute_col, period_col = st.columns(3)
@@ -146,22 +190,22 @@ with right:
             frequency = st.selectbox("Frequency", ["once", "daily", "weekly"])
             submitted_task = st.form_submit_button("Add task")
 
-        if submitted_task and title.strip():
-            pet = owner.find_pet(selected_pet)
-            if pet is not None:
+        if submitted_task:
+            title = (custom_title or "").strip() if title_choice == "Other (custom)" else title_choice
+            if title:
                 hour_24 = hour_12 % 12
                 if period == "PM":
                     hour_24 += 12
-                pet.add_task(
+                selected_pet.add_task(
                     Task(
-                        title=title.strip(),
+                        title=title,
                         time=f"{hour_24:02d}:{minute}",
                         duration_minutes=int(duration),
                         priority=priority,
                         frequency=frequency,
                     )
                 )
-                st.success(f"Added {title.strip()} for {selected_pet}.")
+                st.success(f"Added {title} for {selected_pet.name}.")
                 st.rerun()
 
 st.divider()
@@ -229,13 +273,16 @@ else:
 if owner.pets:
     st.subheader("Complete a Task")
     open_tasks = scheduler.sort_by_time(scheduler.filter_tasks(completed=False))
-    task_options = [f"{pet.name} | {task.title}" for pet, task in open_tasks]
-    if task_options:
-        selected = st.selectbox("Open task", task_options)
+    if open_tasks:
+        selected_open_pair = st.selectbox(
+            "Open task",
+            open_tasks,
+            format_func=lambda pair: f"{pet_species_icon(pair[0].species)} {pair[0].name} | {task_type_icon(pair[1].title)} {pair[1].title}",
+        )
         if st.button("Mark complete"):
-            pet_name, task_title = selected.split(" | ", 1)
-            scheduler.mark_task_complete(pet_name, task_title)
-            st.success(f"Completed {task_title}.")
+            open_pet, open_task = selected_open_pair
+            scheduler.mark_task_complete(open_pet.name, open_task.title)
+            st.success(f"Completed {open_task.title}.")
             st.rerun()
     else:
         st.info("All tasks are complete.")
@@ -246,7 +293,7 @@ if owner.pets:
         selected_task_pair = st.selectbox(
             "Task",
             all_tasks,
-            format_func=lambda pair: f"{pair[0].name} | {pair[1].title} ({'Done' if pair[1].completed else 'Open'})",
+            format_func=lambda pair: f"{pet_species_icon(pair[0].species)} {pair[0].name} | {task_type_icon(pair[1].title)} {pair[1].title} ({'Done' if pair[1].completed else 'Open'})",
         )
         selected_pet, selected_task = selected_task_pair
 

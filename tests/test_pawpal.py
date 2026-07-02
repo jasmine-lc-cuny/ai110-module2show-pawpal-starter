@@ -1,6 +1,14 @@
 from datetime import date, timedelta
 
-from pawpal_system import Owner, Pet, Scheduler, Task, format_time_12h, task_type_icon
+from pawpal_system import (
+    Owner,
+    Pet,
+    Scheduler,
+    Task,
+    format_time_12h,
+    pet_species_icon,
+    task_type_icon,
+)
 
 
 def test_task_type_icon_varies_by_task_title():
@@ -11,8 +19,24 @@ def test_task_type_icon_varies_by_task_title():
     assert task_type_icon("Wash") == "🧼"
     assert task_type_icon("Hair Cut") == "✂️"
     assert task_type_icon("Trim Nails") == "💅"
+    assert task_type_icon("Ear Cleaning") == "👂"
+    assert task_type_icon("Teeth Brushing") == "🦷"
     assert task_type_icon("Vet checkup") == "🏥"
     assert task_type_icon("Something unrelated") == "🐾"
+
+
+def test_task_type_icon_heartworm_does_not_false_match_ear_substring():
+    # "heartworm" contains the substring "ear" — medication must be checked
+    # before the ear-care category or this would wrongly return the ear icon.
+    assert task_type_icon("Heartworm Prevention") == "💊"
+
+
+def test_pet_species_icon_varies_by_species():
+    assert pet_species_icon("dog") == "🐕"
+    assert pet_species_icon("cat") == "🐈"
+    assert pet_species_icon("Dog") == "🐕"
+    assert pet_species_icon("other") == "🐾"
+    assert pet_species_icon("iguana") == "🐾"
 
 
 def test_format_time_12h_converts_24_hour_edge_cases():

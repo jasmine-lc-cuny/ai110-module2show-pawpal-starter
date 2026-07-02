@@ -8,13 +8,17 @@ from datetime import date, timedelta
 PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 
 # Keyword -> icon lookup used by Task.summary() to show a different emoji per
-# task type (walk, medication, feeding, nail trim, haircut, bath, brushing,
-# vet visit), checked in order so more specific keywords win. Falls back to
-# a generic paw print.
+# task type (walk, medication, feeding, ear care, dental, nail trim, haircut,
+# bath, brushing, vet visit), checked in order so more specific keywords win
+# — e.g. "medic"/"heartworm" must be checked before "ear" so "Heartworm
+# Prevention" doesn't false-match the "ear" substring inside "heartworm".
+# Falls back to a generic paw print.
 TASK_TYPE_ICONS: list[tuple[tuple[str, ...], str]] = [
     (("walk", "hike", "play", "exercise"), "🐕"),
     (("medic", "med", "pill", "heartworm", "vaccine", "dose"), "💊"),
     (("feed", "breakfast", "lunch", "dinner", "meal", "snack"), "🍖"),
+    (("ear",), "👂"),
+    (("tooth", "teeth", "dental"), "🦷"),
     (("nail", "trim"), "💅"),
     (("haircut", "hair cut", "cut"), "✂️"),
     (("wash", "bath"), "🧼"),
@@ -30,6 +34,18 @@ def task_type_icon(title: str) -> str:
         if any(keyword in lowered for keyword in keywords):
             return icon
     return "🐾"
+
+
+# Species -> avatar emoji, shown next to a pet's name throughout the app.
+PET_SPECIES_ICONS = {
+    "dog": "🐕",
+    "cat": "🐈",
+}
+
+
+def pet_species_icon(species: str) -> str:
+    """Return an avatar emoji for a pet's species, or a generic paw print."""
+    return PET_SPECIES_ICONS.get(species.lower(), "🐾")
 
 
 def format_time_12h(time_str: str) -> str:
