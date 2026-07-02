@@ -1,6 +1,8 @@
 from datetime import date
 
-from pawpal_system import Owner, Pet, Scheduler, Task
+from tabulate import tabulate
+
+from pawpal_system import Owner, Pet, Scheduler, Task, task_type_icon
 
 
 def build_demo_owner():
@@ -23,14 +25,29 @@ def build_demo_owner():
 
 
 def print_schedule(title, task_pairs):
-    """Print a readable schedule section."""
+    """Print a schedule section as a formatted table using tabulate."""
     print(title)
     if not task_pairs:
-        print("  No tasks found.")
+        print("  No tasks found.\n")
         return
 
-    for pet, task in task_pairs:
-        print(f"  {task.summary(pet.name)}")
+    rows = [
+        [
+            task_type_icon(task.title),
+            task.time,
+            pet.name,
+            task.title,
+            f"{task.duration_minutes} min",
+            task.priority,
+            task.frequency,
+            task.due_date.isoformat(),
+            "✅ done" if task.completed else "⏳ open",
+        ]
+        for pet, task in task_pairs
+    ]
+    headers = ["", "Time", "Pet", "Task", "Duration", "Priority", "Frequency", "Due Date", "Status"]
+    print(tabulate(rows, headers=headers, tablefmt="rounded_outline"))
+    print()
 
 
 def main():
@@ -42,20 +59,16 @@ def main():
     print("=" * 32)
 
     print_schedule("📅 Today's Schedule", scheduler.todays_schedule())
-    print()
 
     print_schedule(
         "High Priority First",
         scheduler.sort_by_priority_then_time(scheduler.todays_schedule()),
     )
-    print()
 
     urgent = scheduler.next_urgent_task()
     print_schedule("🚨 Next Urgent Task", [urgent] if urgent else [])
-    print()
 
     print_schedule("⭐ Today's Top 3 Priorities", scheduler.top_priorities(3))
-    print()
 
     conflicts = scheduler.detect_conflicts(scheduler.todays_schedule())
     print("⚠️ Conflict Warnings")
@@ -73,7 +86,6 @@ def main():
         if pet.name == "Mochi" and task.title == "Morning walk" and task.due_date > date.today()
     ]
     print_schedule("🔁 Recurring Task Created", next_walks)
-    print()
 
     data_path = "data.json"
     owner.save_to_json(data_path)
