@@ -37,6 +37,8 @@ classDiagram
         +detect_conflicts(tasks) list
         +mark_task_complete(pet_name, task_title) Task
         +todays_schedule() list
+        +next_urgent_task(tasks) Task
+        +top_priorities(n, tasks) list
     }
 
     Owner "1" --> "*" Pet : owns

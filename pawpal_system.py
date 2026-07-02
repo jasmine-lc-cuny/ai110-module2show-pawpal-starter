@@ -177,3 +177,14 @@ class Scheduler:
             if task.due_date == today and not task.completed
         ]
         return self.sort_by_time(open_today)
+
+    def next_urgent_task(self, tasks: list[tuple[Pet, Task]] | None = None):
+        """Return today's single highest-priority, earliest-time open task."""
+        task_pairs = tasks if tasks is not None else self.todays_schedule()
+        ranked = self.sort_by_priority_then_time(task_pairs)
+        return ranked[0] if ranked else None
+
+    def top_priorities(self, n: int = 3, tasks: list[tuple[Pet, Task]] | None = None):
+        """Return today's top n open tasks ranked by priority then time."""
+        task_pairs = tasks if tasks is not None else self.todays_schedule()
+        return self.sort_by_priority_then_time(task_pairs)[:n]

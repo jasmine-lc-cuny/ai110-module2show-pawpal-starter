@@ -14,6 +14,7 @@ verified through `main.py` and pytest before being connected to the UI in
 - Filter tasks by pet and completion status.
 - Detect exact date/time conflicts and show warnings.
 - Mark tasks complete and automatically create the next daily or weekly task.
+- Surface today's single next urgent task and a top-3 priority shortlist.
 - Use a Streamlit interface backed by `st.session_state` so pets and tasks stay available during the browser session.
 
 ## Setup
@@ -53,6 +54,14 @@ High Priority First
   12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
   08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
 
+🚨 Next Urgent Task
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+
+⭐ Today's Top 3 Priorities
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
+
 ⚠️ Conflict Warnings
   Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat
 
@@ -69,6 +78,8 @@ High Priority First
 | Filtering | `Scheduler.filter_tasks()` | Filters by pet name and/or completion status. |
 | Conflict handling | `Scheduler.detect_conflicts()` | Returns warning strings for exact same date/time matches. |
 | Recurring tasks | `Task.next_occurrence()`, `Scheduler.mark_task_complete()` | Creates the next daily or weekly task after completion. |
+| Next urgent task | `Scheduler.next_urgent_task()` | Returns today's single highest-priority, earliest-time open task (or `None`). |
+| Top priorities | `Scheduler.top_priorities(n=3)` | Returns today's top `n` open tasks ranked by priority then time. |
 
 ## Testing PawPal+
 
@@ -79,18 +90,19 @@ python -m pytest
 ```
 
 The tests cover task completion, task addition, chronological sorting,
-filtering, daily recurrence, and conflict detection.
+filtering, daily recurrence, conflict detection, next-urgent-task selection,
+and top-priority ranking.
 
 ```text
-============================= test session starts =============================
-platform win32 -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
-rootdir: D:\codex\ai110-module2show-pawpal-starter
-plugins: anyio-4.14.0
-collected 6 items
+============================= test session starts ==============================
+platform linux -- Python 3.12.1, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspaces/ai110-module2show-pawpal-starter
+plugins: anyio-4.14.1
+collected 9 items
 
-tests\test_pawpal.py ......                                              [100%]
+tests/test_pawpal.py .........                                           [100%]
 
-============================== 6 passed in 0.03s ==============================
+============================== 9 passed in 0.02s ===============================
 ```
 
 Confidence Level: 4/5 stars. The main happy paths and required scheduling
@@ -122,6 +134,14 @@ High Priority First
   08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
   12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
   08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-02, ⏳ open)
+
+🚨 Next Urgent Task
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+
+⭐ Today's Top 3 Priorities
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-02, ⏳ open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-02, ⏳ open)
 
 ⚠️ Conflict Warnings
   Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat

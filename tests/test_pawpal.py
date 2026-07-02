@@ -78,3 +78,38 @@ def test_conflict_detection_flags_duplicate_times():
     assert "08:00" in warnings[0]
     assert "Mochi: Morning walk" in warnings[0]
     assert "Luna: Brush coat" in warnings[0]
+
+
+def test_next_urgent_task_picks_highest_priority_then_earliest_time():
+    owner = Owner("Jordan")
+    pet = Pet("Mochi", "dog")
+    pet.add_task(Task("Walk", "09:00", 30, priority="low"))
+    pet.add_task(Task("Medication", "12:00", 5, priority="high"))
+    pet.add_task(Task("Breakfast", "07:00", 10, priority="high"))
+    owner.add_pet(pet)
+
+    urgent = Scheduler(owner).next_urgent_task()
+
+    assert urgent is not None
+    assert urgent[1].title == "Breakfast"
+
+
+def test_next_urgent_task_returns_none_when_no_open_tasks_today():
+    owner = Owner("Jordan")
+    owner.add_pet(Pet("Mochi", "dog"))
+
+    assert Scheduler(owner).next_urgent_task() is None
+
+
+def test_top_priorities_returns_top_n_ranked_tasks():
+    owner = Owner("Jordan")
+    pet = Pet("Mochi", "dog")
+    pet.add_task(Task("Walk", "09:00", 30, priority="low"))
+    pet.add_task(Task("Medication", "12:00", 5, priority="high"))
+    pet.add_task(Task("Breakfast", "07:00", 10, priority="high"))
+    pet.add_task(Task("Brush", "08:00", 15, priority="medium"))
+    owner.add_pet(pet)
+
+    top_two = Scheduler(owner).top_priorities(2)
+
+    assert [task.title for _, task in top_two] == ["Breakfast", "Medication"]

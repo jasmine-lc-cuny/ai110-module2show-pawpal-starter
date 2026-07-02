@@ -50,6 +50,13 @@ def main():
     )
     print()
 
+    urgent = scheduler.next_urgent_task()
+    print_schedule("🚨 Next Urgent Task", [urgent] if urgent else [])
+    print()
+
+    print_schedule("⭐ Today's Top 3 Priorities", scheduler.top_priorities(3))
+    print()
+
     conflicts = scheduler.detect_conflicts(scheduler.todays_schedule())
     print("⚠️ Conflict Warnings")
     if conflicts:
