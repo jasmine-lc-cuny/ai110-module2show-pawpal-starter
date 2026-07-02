@@ -27,6 +27,7 @@ def task_rows(task_pairs):
             "Type": task_type_icon(task.title),
             "Time": task.time,
             "Pet": pet.name,
+            "Species": pet.species,
             "Task": task.title,
             "Duration": task.duration_minutes,
             "Priority": task.priority,

@@ -47,42 +47,42 @@ PawPal+ schedule for Jordan
 ================================
 📅 Today's Schedule
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | cat     | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 ❗ High Priority First
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
-| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| 08:00 | Luna  | cat     | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
 
 🐾 Mochi's Open Tasks
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 🚨 Next Urgent Task
 
-| Time  | Pet  | Task         | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :----| :------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna | 🍖 Breakfast | 10 min   | high     | daily     | 2026-07-02 | open   |
+| Time  | Pet  | Species | Task         | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :----| :-------| :------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna | cat     | 🍖 Breakfast | 10 min   | high     | daily     | 2026-07-02 | open   |
 
 ⭐ Today's Top 3 Priorities
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 ⚠️ Conflict Warnings
 
@@ -90,18 +90,18 @@ PawPal+ schedule for Jordan
 
 🔁 Recurring Task Created
 
-| Time  | Pet   | Task            | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :---------------| :--------| :--------| :---------| :----------| :------|
-| 08:00 | Mochi | 🐕 Morning walk | 30 min   | high     | daily     | 2026-07-03 | open   |
+| Time  | Pet   | Species | Task            | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :---------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | dog     | 🐕 Morning walk | 30 min   | high     | daily     | 2026-07-03 | open   |
 
 💾 Saved to main_demo_data.json and reloaded a fresh Owner from disk
 Reloaded Schedule (from main_demo_data.json)
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | cat     | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 ```
 
 ## Smarter Scheduling
@@ -171,42 +171,42 @@ PawPal+ schedule for Jordan
 ================================
 📅 Today's Schedule
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | cat     | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 ❗ High Priority First
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
-| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| 08:00 | Luna  | cat     | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
 
 🐾 Mochi's Open Tasks
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 🚨 Next Urgent Task
 
-| Time  | Pet  | Task         | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :----| :------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna | 🍖 Breakfast | 10 min   | high     | daily     | 2026-07-02 | open   |
+| Time  | Pet  | Species | Task         | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :----| :-------| :------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna | cat     | 🍖 Breakfast | 10 min   | high     | daily     | 2026-07-02 | open   |
 
 ⭐ Today's Top 3 Priorities
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | dog     | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 ⚠️ Conflict Warnings
 
@@ -214,18 +214,18 @@ PawPal+ schedule for Jordan
 
 🔁 Recurring Task Created
 
-| Time  | Pet   | Task            | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :---------------| :--------| :--------| :---------| :----------| :------|
-| 08:00 | Mochi | 🐕 Morning walk | 30 min   | high     | daily     | 2026-07-03 | open   |
+| Time  | Pet   | Species | Task            | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :---------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | dog     | 🐕 Morning walk | 30 min   | high     | daily     | 2026-07-03 | open   |
 
 💾 Saved to main_demo_data.json and reloaded a fresh Owner from disk
 Reloaded Schedule (from main_demo_data.json)
 
-| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
-| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
-| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
-| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
-| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| Time  | Pet   | Species | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-------| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | cat     | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | cat     | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | dog     | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 ```
 
 ## Optional Challenges

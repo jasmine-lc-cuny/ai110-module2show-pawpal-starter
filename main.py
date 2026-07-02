@@ -37,7 +37,7 @@ def print_schedule(title, task_pairs):
     # in a given viewer, the row just gets slightly uneven spacing instead
     # of a visibly broken border (unlike a full box-drawing style).
     table = PrettyTable()
-    table.field_names = ["Time", "Pet", "Task", "Duration", "Priority", "Frequency", "Due Date", "Status"]
+    table.field_names = ["Time", "Pet", "Species", "Task", "Duration", "Priority", "Frequency", "Due Date", "Status"]
     table.set_style(TableStyle.MARKDOWN)
     table.align = "l"
     for pet, task in task_pairs:
@@ -45,6 +45,7 @@ def print_schedule(title, task_pairs):
             [
                 task.time,
                 pet.name,
+                pet.species,
                 f"{task_type_icon(task.title)} {task.title}",
                 f"{task.duration_minutes} min",
                 task.priority,
