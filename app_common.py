@@ -68,6 +68,14 @@ COMMON_TASK_TITLES = [
     "Give Medication",
     "Heartworm Prevention",
     "Vet Appointment",
+    "X-Ray",
+    "Injection Medication",
+    "Injection Vaccine",
+    "Injection Subcutaneous",
+    "Injection Intramuscular",
+    "Injection Intravenous",
+    "Blood Work",
+    "Surgery",
     "Brush Coat",
     "Wash / Bath",
     "Hair Cut",
@@ -77,6 +85,96 @@ COMMON_TASK_TITLES = [
     "Playtime",
 ]
 
+# Extra "Reason" sub-options offered on the veterinary quick-add form for
+# task titles vets naturally subdivide further, stored on Task.notes. Not
+# every title has one — only these get a second picker after "Task". Each
+# injection route lists what's actually administered that way (including
+# things like chemotherapy) rather than just describing the route itself.
+VETERINARY_TASK_REASONS = {
+    "Give Medication": ["Heartworm Prevention", "Antibiotics"],
+    "X-Ray": ["Hip"],
+    "Blood Work": [
+        "Complete Blood Count (CBC)",
+        "Serum Chemistry",
+        "Thyroid Panel",
+        "Electrolyte Panel",
+        "Pre-Anesthetic Panel",
+        "Coagulation Profile",
+    ],
+    "Injection Subcutaneous": [
+        "Routine Vaccines",
+        "Maintenance Medications (e.g. Insulin)",
+        "Fluid Therapy",
+    ],
+    "Injection Intramuscular": [
+        "Pain Management",
+        "Sedatives and Tranquilizers",
+        "Antibiotics",
+    ],
+    "Injection Intravenous": [
+        "General Anesthesia",
+        "Emergency Medications",
+        "Chemotherapy",
+        "Continuous Fluid Therapy",
+    ],
+}
+
+# Some reasons differ by the pet's species (which vaccine, which surgery);
+# falls back to the "dog" list for any species without its own entry.
+VETERINARY_TASK_REASONS_BY_SPECIES = {
+    "Injection Vaccine": {
+        "dog": ["Rabies", "Distemper", "Parvovirus", "Adenovirus"],
+        "cat": ["Rabies", "Panleukopenia", "Calicivirus", "Herpesvirus"],
+    },
+    "Surgery": {
+        "dog": [
+            "Neuter",
+            "Dental Extractions",
+            "Mass/Tumor Removals",
+            "Gastrointestinal Surgeries",
+            "Exploratory Laparotomy",
+            "C-Section",
+        ],
+        "cat": [
+            "Spay",
+            "Dental Extractions",
+            "Mass/Tumor Removals",
+            "Gastrointestinal Surgeries",
+            "Exploratory Laparotomy",
+            "C-Section",
+        ],
+    },
+}
+
+# "Injection Medication" gets its own two-step picker (Category, then the
+# specific long-/fast-acting injectable) rather than one flat list, since a
+# named brand-name medication makes more sense grouped by what it treats.
+INJECTION_MEDICATION_CATEGORIES = [
+    "Pain & Arthritis Management",
+    "Flea, Tick, & Allergy Relief",
+    "Antibiotics & General Treatment",
+]
+
+# Pain & arthritis injectables differ by species (Librela/Adequan Canine are
+# dog-specific, Solensia is cat-specific); falls back to "dog" for any
+# species without its own entry, same convention as VETERINARY_TASK_REASONS_BY_SPECIES.
+INJECTION_MEDICATION_PAIN_OPTIONS_BY_SPECIES = {
+    "dog": [
+        "Librela (bedinvetmab)",
+        "Adequan Canine (polysulfated glycosaminoglycan)",
+    ],
+    "cat": ["Solensia (frunevetmab)"],
+}
+
+# These two categories aren't species-split in practice, so they stay flat.
+INJECTION_MEDICATION_OPTIONS = {
+    "Flea, Tick, & Allergy Relief": ["Bravecto Quantum", "Cytopoint"],
+    "Antibiotics & General Treatment": [
+        "Convenia (cefovecin sodium)",
+        "Injectable Insulin (Vetsulin or ProZinc)",
+    ],
+}
+
 # Common clinic services offered in the "Service" dropdown on the Services
 # page, each with a typical default cost that pre-fills (but doesn't lock)
 # the Cost field — same "pick a common one, or Other (custom)" pattern as
@@ -84,7 +182,7 @@ COMMON_TASK_TITLES = [
 COMMON_SERVICES = [
     ("Blood Work", 45.0),
     ("X-Ray", 100.0),
-    ("Medication Injection", 25.0),
+    ("Injection Medication", 25.0),
     ("Surgery", 500.0),
     ("Vaccination", 30.0),
     ("Dental Cleaning", 80.0),
@@ -109,7 +207,19 @@ SERVICE_CATEGORY_ICONS = {
 CATEGORY_TASK_TITLES = {
     "grooming": ["Brush Coat", "Wash / Bath", "Hair Cut", "Trim Nails", "Ear Cleaning", "Teeth Brushing"],
     "walking": ["Morning Walk", "Afternoon Walk", "Evening Walk", "Playtime"],
-    "veterinary": ["Give Medication", "Heartworm Prevention", "Vet Appointment"],
+    "veterinary": [
+        "Give Medication",
+        "Heartworm Prevention",
+        "Vet Appointment",
+        "X-Ray",
+        "Injection Medication",
+        "Injection Vaccine",
+        "Injection Subcutaneous",
+        "Injection Intramuscular",
+        "Injection Intravenous",
+        "Blood Work",
+        "Surgery",
+    ],
     "special_services": ["Breakfast", "Lunch", "Dinner"],
 }
 
@@ -256,6 +366,7 @@ def task_rows(task_pairs):
             "Pet": f"{pet_species_icon(pet.species)} {pet.name}",
             "Species": pet.species,
             "Task": task.title,
+            "Reason": task.notes or "—",
             "Duration": task.duration_minutes,
             "Priority": task.priority,
             "Frequency": task.frequency,
@@ -274,6 +385,42 @@ def tasks_in_category(owner: Owner, category: str):
         for pet, task in owner.all_tasks()
         if task_type_icon(task.title) in icons
     ]
+
+
+def _render_veterinary_reason_picker(title: str, species: str) -> str | None:
+    """Show an extra "Reason" sub-picker for veterinary task titles vets
+    naturally subdivide further (which vaccine, which blood panel, etc).
+    Returns the picked reason (stored on Task.notes), or None if this task
+    title has no defined sub-reasons.
+
+    Called with `title`/`species` read from widgets that live outside the
+    surrounding st.form, so this picker's own widgets must too — otherwise
+    it wouldn't react until the whole form is submitted.
+    """
+    species_key = species.lower()
+
+    if title == "Injection Medication":
+        category = st.selectbox(
+            "Medication Category", INJECTION_MEDICATION_CATEGORIES, key="vet_med_category"
+        )
+        if category == "Pain & Arthritis Management":
+            medication_options = INJECTION_MEDICATION_PAIN_OPTIONS_BY_SPECIES.get(
+                species_key, INJECTION_MEDICATION_PAIN_OPTIONS_BY_SPECIES["dog"]
+            )
+        else:
+            medication_options = INJECTION_MEDICATION_OPTIONS[category]
+        return st.selectbox("Medication", medication_options, key=f"vet_med_select_{category}")
+
+    if title in VETERINARY_TASK_REASONS_BY_SPECIES:
+        species_options = VETERINARY_TASK_REASONS_BY_SPECIES[title].get(
+            species_key, VETERINARY_TASK_REASONS_BY_SPECIES[title]["dog"]
+        )
+        return st.selectbox("Reason", species_options, key=f"vet_reason_select_{title}")
+
+    if title in VETERINARY_TASK_REASONS:
+        return st.selectbox("Reason", VETERINARY_TASK_REASONS[title], key=f"vet_reason_select_{title}")
+
+    return None
 
 
 def render_category_page(category: str, display_name: str, icon: str) -> None:
@@ -301,18 +448,29 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
         )
     else:
         st.subheader(f"Schedule a {display_name} Task")
-        with st.form(f"add_{category}_task_form", clear_on_submit=True):
-            # Index-based, then re-fetch owner.pets[i] fresh — st.selectbox()
-            # isn't guaranteed to hand back the same live object across
-            # reruns, and add_task() mutates a list on that object, so a
-            # copy would silently lose the new task.
-            selected_pet_index = st.selectbox(
-                "Pet",
-                range(len(owner.pets)),
-                format_func=lambda i: f"{pet_species_icon(owner.pets[i].species)} {owner.pets[i].name}",
-            )
-            title = st.selectbox("Task", title_options)
 
+        # Pet and Task live outside the form (like the "Other (custom)"
+        # reveal elsewhere) so the veterinary Reason sub-picker below can
+        # react immediately to which one is selected — widgets inside
+        # st.form don't trigger a rerun until the whole form is submitted.
+        # Index-based, then re-fetch owner.pets[i] fresh at submit time —
+        # st.selectbox() isn't guaranteed to hand back the same live object
+        # across reruns, and add_task() mutates a list on that object, so a
+        # copy would silently lose the new task.
+        selected_pet_index = st.selectbox(
+            "Pet",
+            range(len(owner.pets)),
+            format_func=lambda i: f"{pet_species_icon(owner.pets[i].species)} {owner.pets[i].name}",
+            key=f"{category}_pet_select",
+        )
+        title = st.selectbox("Task", title_options, key=f"{category}_title_select")
+
+        reason = None
+        if category == "veterinary":
+            selected_species = owner.pets[selected_pet_index].species
+            reason = _render_veterinary_reason_picker(title, selected_species)
+
+        with st.form(f"add_{category}_task_form", clear_on_submit=True):
             st.write("Time")
             hour_col, minute_col, period_col = st.columns(3)
             with hour_col:
@@ -345,9 +503,13 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
                     duration_minutes=int(duration),
                     priority=priority,
                     frequency=frequency,
+                    notes=reason,
                 )
             )
-            st.success(f"Added {title} for {selected_pet.name}.")
+            success_message = f"Added {title} for {selected_pet.name}."
+            if reason:
+                success_message = f"Added {title} ({reason}) for {selected_pet.name}."
+            st.success(success_message)
             st.rerun()
 
     st.divider()

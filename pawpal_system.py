@@ -15,7 +15,7 @@ PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 # Falls back to a generic paw print.
 TASK_TYPE_ICONS: list[tuple[tuple[str, ...], str]] = [
     (("walk", "hike", "play", "exercise"), "🐕"),
-    (("medic", "med", "pill", "heartworm", "vaccine", "dose"), "💊"),
+    (("medic", "med", "pill", "heartworm", "vaccine", "dose", "injection"), "💊"),
     (("feed", "breakfast", "lunch", "dinner", "meal", "snack"), "🍖"),
     (("ear",), "👂"),
     (("tooth", "teeth", "dental"), "🦷"),
@@ -23,7 +23,7 @@ TASK_TYPE_ICONS: list[tuple[tuple[str, ...], str]] = [
     (("haircut", "hair cut", "cut"), "✂️"),
     (("wash", "bath"), "🧼"),
     (("brush", "comb", "groom"), "🪮"),
-    (("vet", "appointment", "checkup", "exam"), "🏥"),
+    (("vet", "appointment", "checkup", "exam", "surgery", "x-ray", "blood"), "🏥"),
 ]
 
 
