@@ -27,6 +27,7 @@ def build_demo_owner():
 def print_schedule(title, task_pairs):
     """Print a schedule section as a formatted table using PrettyTable."""
     print(title)
+    print()
     if not task_pairs:
         print("  No tasks found.\n")
         return
@@ -78,6 +79,7 @@ def main():
 
     conflicts = scheduler.detect_conflicts(scheduler.todays_schedule())
     print("⚠️ Conflict Warnings")
+    print()
     if conflicts:
         for warning in conflicts:
             print(f"  {warning}")
