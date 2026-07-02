@@ -2,6 +2,7 @@
 
 import re
 import uuid
+from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -232,75 +233,27 @@ def get_owners() -> list[Owner]:
             st.session_state.owners = load_owners_from_json(str(DATA_PATH))
         else:
             st.session_state.owners = [Owner("Jordan")]
-        st.session_state.current_owner_index = 0
     return st.session_state.owners
 
 
-def render_owner_switcher() -> None:
-    """Render the sidebar "Owner" picker. Call this exactly once near the top
-    of each page, before get_owner()/get_scheduler() — calling it twice in
-    the same run would register the same widget key twice and crash.
+def get_combined_owner() -> Owner:
+    """Return a synthetic Owner holding every pet across every owner, so the
+    schedule/calendar pages show the whole clinic instead of one customer.
 
-    Without this, every pet/task ever added lands in one shared owner
-    record no matter whose name was typed into "Owner name", which is why
-    two different customers' pets used to show up mixed together.
+    The Pet objects are the same live instances the real owners hold — only
+    the wrapping Owner is synthetic — so reads see current data. Never save
+    this object's structure anywhere; save_owner()/save_owners() persist the
+    real owners list.
     """
-    owners = get_owners()
-
-    st.sidebar.subheader("Owner")
-    # Only pass index= on the very first render for this key. Once
-    # "owner_switcher" exists in session_state (set either by the user
-    # picking an option or by _create_owner()'s callback), Streamlit uses
-    # that value and warns if index= is passed alongside it.
-    index_kwargs = {}
-    if "owner_switcher" not in st.session_state:
-        current_index = st.session_state.current_owner_index
-        index_kwargs["index"] = current_index if current_index < len(owners) else 0
-
-    choice = st.sidebar.selectbox(
-        "Current owner",
-        list(range(len(owners))) + [NEW_OWNER_CHOICE],
-        format_func=lambda option: owners[option].name if isinstance(option, int) else option,
-        key="owner_switcher",
-        **index_kwargs,
+    return Owner(
+        "All Owners",
+        pets=[pet for owner in get_owners() for pet in owner.pets],
     )
-
-    if choice == NEW_OWNER_CHOICE:
-        st.sidebar.text_input("New owner name", key="new_owner_name")
-        # Mutating st.session_state["owner_switcher"] must happen in a
-        # callback (run by Streamlit before the script re-executes) — doing
-        # it inline here, after the selectbox above already instantiated
-        # that key this run, raises StreamlitAPIException.
-        st.sidebar.button("Create owner", key="create_owner_button", on_click=_create_owner, args=(owners,))
-    else:
-        st.session_state.current_owner_index = choice
-
-
-def _create_owner(owners: list[Owner]) -> None:
-    """Callback for the "Create owner" button: add a new owner and switch to them."""
-    new_owner_name = st.session_state.get("new_owner_name", "").strip()
-    if not new_owner_name:
-        return
-    owners.append(Owner(new_owner_name))
-    new_index = len(owners) - 1
-    st.session_state.current_owner_index = new_index
-    st.session_state.owner_switcher = new_index
-    save_owners(owners)
-
-
-def get_owner() -> Owner:
-    """Return the currently-selected owner. render_owner_switcher() must run
-    earlier in the page for the selection to reflect the sidebar."""
-    owners = get_owners()
-    index = st.session_state.get("current_owner_index", 0)
-    if index >= len(owners):
-        index = 0
-    return owners[index]
 
 
 def get_scheduler() -> Scheduler:
-    """Return a Scheduler for the currently-selected owner."""
-    return Scheduler(get_owner())
+    """Return a Scheduler across every owner's pets."""
+    return Scheduler(get_combined_owner())
 
 
 def save_owners(owners: list[Owner]) -> None:
@@ -315,8 +268,8 @@ def save_owner(owner: Owner) -> None:
 
 def get_clinic() -> Clinic:
     """Return this session's Clinic (departments/doctors/services/appointments),
-    loading it from clinic.json once if needed. Unlike get_owner(), this is not
-    scoped to any single owner — it's shared across every "Veterinarian" page."""
+    loading it from clinic.json once if needed. Shared across every
+    "Veterinarian" page, independent of the owners list in data.json."""
     if "clinic" not in st.session_state:
         if CLINIC_DATA_PATH.exists():
             st.session_state.clinic = Clinic.load_from_json(str(CLINIC_DATA_PATH))
@@ -355,6 +308,39 @@ def save_uploaded_document(owner: Owner, pet: Pet, category: str, uploaded_file)
 def delete_uploaded_document(document: Document) -> None:
     """Remove an uploaded document's file from disk, if it still exists."""
     Path(document.path).unlink(missing_ok=True)
+
+
+def pet_label(pet: Pet, owners: list[Owner]) -> str:
+    """Return "🐈 Garfield (Jasmine)" — a pet's display label including its
+    owner, looked up by object identity in the passed owners list.
+
+    Owner names matter in dropdown labels for correctness, not just clarity:
+    Streamlit identifies a selectbox's chosen option by its *formatted label
+    string*, so two options that format identically can register as each
+    other when clicked.
+
+    Takes owners as a parameter (rather than calling get_owners()) so labels
+    can be precomputed into plain lists during the script run — a selectbox
+    format_func can get re-invoked outside any run context, where
+    st.session_state isn't available.
+    """
+    for owner in owners:
+        if any(existing is pet for existing in owner.pets):
+            return f"{pet_species_icon(pet.species)} {pet.name} ({owner.name})"
+    return f"{pet_species_icon(pet.species)} {pet.name}"
+
+
+def task_pair_label(index: int, pet: Pet, task: Task, owners: list[Owner]) -> str:
+    """Return a unique dropdown label for a (pet, task) pair.
+
+    The "N." prefix guarantees no two options in one dropdown ever share a
+    label (see pet_label's docstring for why identical labels are unsafe),
+    even for two same-titled tasks on the same pet at the same time.
+    """
+    return (
+        f"{index + 1}. {pet_label(pet, owners)} | {task_type_icon(task.title)} {task.title} "
+        f"@ {format_time_12h(task.time)}"
+    )
 
 
 def task_rows(task_pairs):
@@ -443,8 +429,7 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
     Completing/deleting/reopening any task still lives on "Today's Schedule"
     rather than being duplicated on every category page.
     """
-    render_owner_switcher()
-    owner = get_owner()
+    owner = get_combined_owner()
     scheduler = get_scheduler()
 
     st.title(f"{icon} {display_name}")
@@ -468,10 +453,16 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
         # st.selectbox() isn't guaranteed to hand back the same live object
         # across reruns, and add_task() mutates a list on that object, so a
         # copy would silently lose the new task.
+        # Labels precomputed into a plain list so the format_func closes over
+        # no session state (see pet_label's docstring).
+        real_owners = get_owners()
+        pet_labels = [
+            f"{i + 1}. {pet_label(pet, real_owners)}" for i, pet in enumerate(owner.pets)
+        ]
         selected_pet_index = st.selectbox(
             "Pet",
             range(len(owner.pets)),
-            format_func=lambda i: f"{pet_species_icon(owner.pets[i].species)} {owner.pets[i].name}",
+            format_func=lambda i: pet_labels[i],
             key=f"{category}_pet_select",
         )
         title = st.selectbox("Task", title_options, key=f"{category}_title_select")
@@ -517,6 +508,7 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
                     notes=reason,
                 )
             )
+            save_owner(owner)
             success_message = f"Added {title} for {selected_pet.name}."
             if reason:
                 success_message = f"Added {title} ({reason}) for {selected_pet.name}."
@@ -533,26 +525,39 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
     open_category_tasks = [pair for pair in category_tasks if not pair[1].completed]
     if open_category_tasks:
         st.subheader("Complete a Task")
-        selected_pair = st.selectbox(
+        # Index-based, then re-fetch the live pair before mutating — and
+        # mutate that exact task directly rather than going through
+        # Scheduler.mark_task_complete()'s pet-name lookup, which could hit
+        # the wrong pet now that different owners can have same-named pets.
+        complete_labels = [
+            task_pair_label(i, pet, task, get_owners())
+            for i, (pet, task) in enumerate(open_category_tasks)
+        ]
+        complete_index = st.selectbox(
             "Open task",
-            open_category_tasks,
-            format_func=lambda pair: f"{pet_species_icon(pair[0].species)} {pair[0].name} | {pair[1].title}",
+            range(len(open_category_tasks)),
+            format_func=lambda i: complete_labels[i],
             key=f"{category}_complete_select",
         )
         if st.button("Mark complete", key=f"{category}_complete_button"):
-            complete_pet, complete_task = selected_pair
-            scheduler.mark_task_complete(complete_pet.name, complete_task.title)
+            complete_pet, complete_task = open_category_tasks[complete_index]
+            complete_task.mark_complete()
+            next_task = complete_task.next_occurrence(completed_on=date.today())
+            if next_task is not None:
+                complete_pet.add_task(next_task)
+            save_owner(owner)
             st.success(f"Completed {complete_task.title}.")
             st.rerun()
 
-    save_owner(owner)
+    # Deliberately no unconditional save here: every mutation above saves
+    # inline before its st.rerun(). A render-time save would let a stale
+    # browser session silently overwrite data.json just by sitting open.
     st.caption('Completing, deleting, and reopening tasks lives on "Today\'s Schedule".')
 
 
 def render_placeholder_page(display_name: str, icon: str) -> None:
     """Render a clearly-labeled "coming soon" page for a service category that
     doesn't have matching task types in TASK_TYPE_ICONS yet."""
-    render_owner_switcher()
     st.title(f"{icon} {display_name}")
     st.info(
         f"{display_name} isn't wired up to specific task types yet — this page "

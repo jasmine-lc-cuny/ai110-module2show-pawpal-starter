@@ -58,5 +58,7 @@ if clinic.services:
 else:
     st.info("No services yet.")
 
-save_clinic(clinic)
+# No render-time save: mutations save inline. A render-time save would
+# let a stale browser session silently overwrite the data file just by
+# sitting open.
 st.caption("Data is auto-saved to `clinic.json` after every change, so it persists between app runs.")

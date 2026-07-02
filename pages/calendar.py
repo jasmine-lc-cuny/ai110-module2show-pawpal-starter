@@ -8,10 +8,8 @@ import streamlit as st
 from pawpal_system import format_time_12h, task_type_icon
 from app_common import (
     PET_TIMELINE_COLORS,
-    get_owner,
+    get_combined_owner,
     get_scheduler,
-    render_owner_switcher,
-    save_owner,
     task_rows,
 )
 
@@ -88,8 +86,7 @@ def render_month_grid(owner, target_year: int, target_month: int) -> None:
     st.markdown(calendar_html, unsafe_allow_html=True)
 
 
-render_owner_switcher()
-owner = get_owner()
+owner = get_combined_owner()
 scheduler = get_scheduler()
 
 st.title("🗓️ Calendar")
@@ -160,5 +157,7 @@ else:
     for warning in day_conflicts:
         st.warning(warning)
 
-save_owner(owner)
+# No render-time save: mutations save inline. A render-time save would
+# let a stale browser session silently overwrite the data file just by
+# sitting open.
 st.caption("Data is auto-saved to `data.json` after every change, so it persists between app runs.")

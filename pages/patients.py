@@ -208,6 +208,22 @@ else:
             value="\n".join(edit_pet.chronic_conditions),
             key="edit_pet_medical_history",
         )
+
+        st.markdown("**Diet**")
+        edit_diet_cols = st.columns(2)
+        with edit_diet_cols[0]:
+            edited_diet_good = st.text_area(
+                "Diet should contain (one per line)",
+                value="\n".join(edit_pet.diet_good),
+                key="edit_pet_diet_good",
+            )
+        with edit_diet_cols[1]:
+            edited_diet_bad = st.text_area(
+                "Diet should not contain (one per line)",
+                value="\n".join(edit_pet.diet_bad),
+                key="edit_pet_diet_bad",
+            )
+
         edited_status = st.selectbox(
             "Status",
             STATUS_OPTIONS,
@@ -235,6 +251,12 @@ else:
         edit_pet.behavioral_notes = edited_behavioral_notes.strip() or None
         edit_pet.chronic_conditions = [
             line.strip() for line in edited_medical_history.splitlines() if line.strip()
+        ]
+        edit_pet.diet_good = [
+            line.strip() for line in edited_diet_good.splitlines() if line.strip()
+        ]
+        edit_pet.diet_bad = [
+            line.strip() for line in edited_diet_bad.splitlines() if line.strip()
         ]
         edit_pet.status = edited_status
         save_owners(owners)
@@ -297,5 +319,7 @@ if visible_patients:
 else:
     st.info("No patients found.")
 
-save_owners(owners)
+# No render-time save: mutations save inline. A render-time save would
+# let a stale browser session silently overwrite the data file just by
+# sitting open.
 st.caption("Data is auto-saved to `data.json` after every change, so it persists between app runs.")
