@@ -125,7 +125,20 @@ with right:
         with st.form("add_task_form", clear_on_submit=True):
             selected_pet = st.selectbox("Pet", [pet.name for pet in owner.pets])
             title = st.text_input("Task title", value="Morning walk")
-            time = st.time_input("Time")
+
+            st.write("Time")
+            hour_col, minute_col, period_col = st.columns(3)
+            with hour_col:
+                hour_12 = st.selectbox(
+                    "Hour", list(range(1, 13)), index=7, label_visibility="collapsed"
+                )
+            with minute_col:
+                minute = st.selectbox(
+                    "Minute", ["00", "15", "30", "45"], label_visibility="collapsed"
+                )
+            with period_col:
+                period = st.selectbox("AM/PM", ["AM", "PM"], label_visibility="collapsed")
+
             duration = st.number_input(
                 "Duration (minutes)", min_value=1, max_value=240, value=20
             )
@@ -136,10 +149,13 @@ with right:
         if submitted_task and title.strip():
             pet = owner.find_pet(selected_pet)
             if pet is not None:
+                hour_24 = hour_12 % 12
+                if period == "PM":
+                    hour_24 += 12
                 pet.add_task(
                     Task(
                         title=title.strip(),
-                        time=time.strftime("%H:%M"),
+                        time=f"{hour_24:02d}:{minute}",
                         duration_minutes=int(duration),
                         priority=priority,
                         frequency=frequency,
