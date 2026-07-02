@@ -2,17 +2,37 @@
 
 ## Agent Workflow
 
-**What task did you give the agent?**
+This project used two different AI coding assistants for two different jobs: Codex built the initial skeleton and backend, and Claude Code (used in the follow-up session covering this log) audited that work against the assignment, fixed what was actually broken, and completed the optional challenges. Codex was then brought back in for one narrow, specific job: acting as the second model in the Challenge 5 comparison below.
 
-I asked Codex to help me complete the PawPal+ project from the CodePath instructions. The work was split into phases: create a UML design and class skeleton, implement the OOP backend, connect the backend to Streamlit, add scheduling algorithms, write pytest tests, and finish the README/reflection. I wanted the agent to keep the commits meaningful so the project history showed design, implementation, testing, and documentation progress.
+### Stage 1 — Initial build (Codex)
+
+**What task did I give the agent?**
+
+I asked Codex to help me complete the PawPal+ project from the CodePath instructions. The work was split into phases: create a UML design and class skeleton, implement the OOP backend, connect the backend to Streamlit, add scheduling algorithms, write pytest tests, and finish the README/reflection.
 
 **What did the agent do?**
 
-Codex created `pawpal_system.py` with the `Owner`, `Pet`, `Task`, and `Scheduler` classes, updated `diagrams/uml.mmd`, and added `diagrams/uml_final.mmd`. It implemented sorting by time, priority sorting, filtering, recurrence, conflict detection, and task completion. It also created `main.py` for CLI verification, rewrote `app.py` so Streamlit uses `st.session_state`, added `tests/test_pawpal.py`, ran `python main.py`, ran `python -m pytest`, and updated `README.md` and `reflection.md`.
+Codex created `pawpal_system.py` with the `Owner`, `Pet`, `Task`, and `Scheduler` classes, updated `diagrams/uml.mmd`, and added `diagrams/uml_final.mmd`. It implemented sorting by time, priority sorting, filtering, recurrence, conflict detection, and task completion. It also created `main.py` for CLI verification, rewrote `app.py` so Streamlit uses `st.session_state`, added `tests/test_pawpal.py`, and produced an initial pass at `README.md`/`reflection.md`.
 
-**What did you have to verify or fix manually?**
+### Stage 2 — Audit, bug fixes, and optional challenges (Claude Code)
 
-I reviewed the design choices and kept the conflict detection intentionally simple so it only warns on exact date/time matches. I also checked that the README output matched the actual terminal output and that the final UML matched the implemented methods. One thing I watched for was overly complex scheduling logic; I wanted the solution to be understandable for a first OOP scheduler project, not a full calendar system.
+**What task did I give the agent?**
+
+I asked Claude Code to check whether Codex's finished project actually matched the assignment line by line, not just look complete, and to fix anything it found — including going after the optional challenges properly instead of leaving them undone or half-claimed.
+
+**What did the agent do?**
+
+- Audited every phase and all five optional challenges against the assignment text, and reported the gap honestly instead of assuming the project was done: the README's "Sample Output" section showed emoji formatting and two whole sections ("🚨 Next Urgent Task", "⭐ Today's Top 3 Priorities") that didn't exist anywhere in the actual code. It traced this to an abandoned git branch (`backup-current-ef1058f`) whose output had been pasted into the README on `main` without the code that produced it ever being merged.
+- Fixed that by re-running `main.py` for real and replacing the fabricated output with the actual output, everywhere it appeared in the README.
+- Then made the emojis genuinely real instead of removing them: added `✅`/`⏳` status icons to `Task.summary()` and emoji section headers to `main.py`, which is what actually earns Optional Challenge 4 (professional output formatting).
+- Implemented `Scheduler.next_urgent_task()` and `Scheduler.top_priorities(n)` — a distinct ranking capability beyond the four base scheduling algorithms — which is what earns Optional Challenge 1.
+- Implemented Optional Challenge 2 (JSON persistence) for real: `to_dict()`/`from_dict()` on `Task`, `Pet`, and `Owner`, plus `Owner.save_to_json()`/`Owner.load_from_json()`. Wired into `main.py` (a real save-then-reload round trip) and into `app.py` (auto-load on session start, auto-save after every render, so Streamlit state survives a full app restart, not just `st.session_state` within one session).
+- Ran the Challenge 5 multi-model comparison below, and — this is the important part — didn't just record the comparison, but caught the integration gap in Codex's answer and fixed it in the actual codebase (see the Prompt Comparison section).
+- Added 6 new pytest cases covering all of the above (12 total, up from 6), kept `diagrams/uml_final.mmd` in sync with every new/changed method signature, and verified everything by actually running `pytest`, running `main.py`, and booting the Streamlit app headlessly rather than assuming the code worked.
+
+**What did I have to verify or fix manually?**
+
+I reviewed each fix before accepting it — for example, confirming the "High Priority First" CLI section in the (formerly stale) README sample actually matched what `Scheduler.sort_by_priority_then_time()` produced, and checking that the new JSON persistence didn't silently break the existing recurrence/conflict tests before committing. I also kept the original conflict-detection design decision (exact date/time matches only, not overlapping durations) — that one was already a reasonable scope call from Stage 1 and didn't need to change.
 
 ---
 
@@ -35,7 +55,7 @@ I reviewed the design choices and kept the conflict detection intentionally simp
 
 ## Additional Prompt Notes (single-tool, not the Challenge 5 submission)
 
-Earlier in the project I also compared two prompts given to the same tool (Codex) at different phases — useful for tracking how prompts evolved, but not a cross-model comparison, so it doesn't count toward Challenge 5 above.
+From Stage 1 (the initial Codex build), I also compared two prompts given to the same tool (Codex) at different phases — useful for tracking how prompts evolved, but not a cross-model comparison, so it doesn't count toward Challenge 5 above.
 
 | | Prompt A | Prompt B |
 |-|----------|----------|
