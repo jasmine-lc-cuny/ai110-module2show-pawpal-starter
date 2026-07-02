@@ -280,8 +280,8 @@ st.title("📊 Dashboard")
 st.caption("A per-pet clinical overview, plus this week's schedule at a glance.")
 
 if not owner.pets:
-    st.info('Add a pet from "My Pets & Schedule" to see their dashboard here.')
-    st.page_link("pages/pets_and_schedule.py", label="Go to My Pets & Schedule", icon="🐾")
+    st.info("Add a pet to see their dashboard here.")
+    st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
 else:
     tabs = st.tabs([f"{pet_species_icon(pet.species)} {pet.name}" for pet in owner.pets])
     for pet_index, (pet, tab) in enumerate(zip(owner.pets, tabs)):

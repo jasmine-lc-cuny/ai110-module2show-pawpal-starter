@@ -189,6 +189,14 @@ class Pet:
     chronic_conditions: list[str] = field(default_factory=list)
     documents: list[Document] = field(default_factory=list)
     blood_type: str | None = None
+    breed: str | None = None
+    height: str | None = None
+    color_markings: str | None = None
+    microchip_number: str | None = None
+    spayed_neutered: str | None = None
+    allergies: str | None = None
+    behavioral_notes: str | None = None
+    status: str = "Alive"
 
     def add_task(self, task: Task):
         """Add a task to this pet."""
@@ -219,6 +227,14 @@ class Pet:
             "chronic_conditions": self.chronic_conditions,
             "documents": [document.to_dict() for document in self.documents],
             "blood_type": self.blood_type,
+            "breed": self.breed,
+            "height": self.height,
+            "color_markings": self.color_markings,
+            "microchip_number": self.microchip_number,
+            "spayed_neutered": self.spayed_neutered,
+            "allergies": self.allergies,
+            "behavioral_notes": self.behavioral_notes,
+            "status": self.status,
         }
 
     @classmethod
@@ -239,6 +255,14 @@ class Pet:
                 for document_data in data.get("documents", [])
             ],
             blood_type=data.get("blood_type"),
+            breed=data.get("breed"),
+            height=data.get("height"),
+            color_markings=data.get("color_markings"),
+            microchip_number=data.get("microchip_number"),
+            spayed_neutered=data.get("spayed_neutered"),
+            allergies=data.get("allergies"),
+            behavioral_notes=data.get("behavioral_notes"),
+            status=data.get("status", "Alive"),
         )
 
 

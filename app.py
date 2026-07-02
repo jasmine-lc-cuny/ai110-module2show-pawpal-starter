@@ -44,7 +44,7 @@ def home_page():
     st.divider()
     st.page_link(
         "pages/pets_and_schedule.py",
-        label="🐾 My Pets & Full Schedule",
+        label="🐾 Pet Profile",
         icon="➡️",
         use_container_width=True,
     )
@@ -58,7 +58,8 @@ def home_page():
         col2.metric("Open tasks today", len(scheduler.todays_schedule()))
         col3.metric("Conflicts", len(conflicts))
     else:
-        st.info('Add your first pet from "My Pets & Full Schedule" to get started.')
+        st.info("Add your first pet to get started.")
+        st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
 
 
 pg = st.navigation(
@@ -66,7 +67,7 @@ pg = st.navigation(
         "": [st.Page(home_page, title="Home", icon="🏠", url_path="home", default=True)],
         "Manage": [
             st.Page("pages/dashboard.py", title="Dashboard", icon="📊"),
-            st.Page("pages/pets_and_schedule.py", title="My Pets & Schedule", icon="🐾"),
+            st.Page("pages/pets_and_schedule.py", title="Pet Profile", icon="🐾"),
             st.Page("pages/todays_schedule.py", title="Today's Schedule", icon="📅"),
             st.Page("pages/calendar.py", title="Calendar", icon="🗓️"),
         ],

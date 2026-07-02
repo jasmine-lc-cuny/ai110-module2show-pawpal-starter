@@ -387,21 +387,28 @@ def tasks_in_category(owner: Owner, category: str):
     ]
 
 
-def _render_veterinary_reason_picker(title: str, species: str) -> str | None:
+def render_veterinary_reason_picker(title: str, species: str, key_prefix: str = "vet") -> str | None:
     """Show an extra "Reason" sub-picker for veterinary task titles vets
     naturally subdivide further (which vaccine, which blood panel, etc).
-    Returns the picked reason (stored on Task.notes), or None if this task
-    title has no defined sub-reasons.
+    Returns the picked reason (stored on Task.notes/Appointment.reason), or
+    None if this task title has no defined sub-reasons.
 
     Called with `title`/`species` read from widgets that live outside the
     surrounding st.form, so this picker's own widgets must too — otherwise
     it wouldn't react until the whole form is submitted.
+
+    `key_prefix` must be unique per call site — this renders both on the
+    veterinary quick-add section and inside the Book Appointment dialog on
+    the same page, so identical keys in both places would crash with
+    DuplicateWidgetID if the dialog happens to be open at the same time.
     """
     species_key = species.lower()
 
     if title == "Injection Medication":
         category = st.selectbox(
-            "Medication Category", INJECTION_MEDICATION_CATEGORIES, key="vet_med_category"
+            "Medication Category",
+            INJECTION_MEDICATION_CATEGORIES,
+            key=f"{key_prefix}_med_category",
         )
         if category == "Pain & Arthritis Management":
             medication_options = INJECTION_MEDICATION_PAIN_OPTIONS_BY_SPECIES.get(
@@ -409,16 +416,22 @@ def _render_veterinary_reason_picker(title: str, species: str) -> str | None:
             )
         else:
             medication_options = INJECTION_MEDICATION_OPTIONS[category]
-        return st.selectbox("Medication", medication_options, key=f"vet_med_select_{category}")
+        return st.selectbox(
+            "Medication", medication_options, key=f"{key_prefix}_med_select_{category}"
+        )
 
     if title in VETERINARY_TASK_REASONS_BY_SPECIES:
         species_options = VETERINARY_TASK_REASONS_BY_SPECIES[title].get(
             species_key, VETERINARY_TASK_REASONS_BY_SPECIES[title]["dog"]
         )
-        return st.selectbox("Reason", species_options, key=f"vet_reason_select_{title}")
+        return st.selectbox(
+            "Reason", species_options, key=f"{key_prefix}_reason_select_{title}"
+        )
 
     if title in VETERINARY_TASK_REASONS:
-        return st.selectbox("Reason", VETERINARY_TASK_REASONS[title], key=f"vet_reason_select_{title}")
+        return st.selectbox(
+            "Reason", VETERINARY_TASK_REASONS[title], key=f"{key_prefix}_reason_select_{title}"
+        )
 
     return None
 
@@ -427,8 +440,8 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
     """Render a full "Book a Service" category page: quick-add form, filtered
     schedule, and a complete-task action, all scoped to this category.
 
-    Full editing/deleting/reopening of any task still lives on the "My Pets
-    & Schedule" page rather than being duplicated on every category page.
+    Completing/deleting/reopening any task still lives on "Today's Schedule"
+    rather than being duplicated on every category page.
     """
     render_owner_switcher()
     owner = get_owner()
@@ -440,12 +453,10 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
     title_options = CATEGORY_TASK_TITLES.get(category, [])
 
     if not owner.pets:
-        st.warning('Add a pet from "My Pets & Schedule" before scheduling tasks here.')
+        st.warning("Add a pet before scheduling tasks here.")
+        st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
     elif not title_options:
-        st.info(
-            f"{display_name} isn't wired up to specific task types yet — "
-            'add pets and tasks from "My Pets & Schedule" instead.'
-        )
+        st.info(f"{display_name} isn't wired up to specific task types yet.")
     else:
         st.subheader(f"Schedule a {display_name} Task")
 
@@ -468,7 +479,7 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
         reason = None
         if category == "veterinary":
             selected_species = owner.pets[selected_pet_index].species
-            reason = _render_veterinary_reason_picker(title, selected_species)
+            reason = render_veterinary_reason_picker(title, selected_species, key_prefix=category)
 
         with st.form(f"add_{category}_task_form", clear_on_submit=True):
             st.write("Time")
@@ -535,7 +546,7 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
             st.rerun()
 
     save_owner(owner)
-    st.caption('Full editing, deleting, and reopening tasks lives on "My Pets & Schedule".')
+    st.caption('Completing, deleting, and reopening tasks lives on "Today\'s Schedule".')
 
 
 def render_placeholder_page(display_name: str, icon: str) -> None:
@@ -545,8 +556,5 @@ def render_placeholder_page(display_name: str, icon: str) -> None:
     st.title(f"{icon} {display_name}")
     st.info(
         f"{display_name} isn't wired up to specific task types yet — this page "
-        f'is a placeholder for a future update. In the meantime, you can track '
-        f'anything {display_name.lower()}-related as a custom task from '
-        f'"My Pets & Schedule".'
+        "is a placeholder for a future update."
     )
-    st.page_link("pages/pets_and_schedule.py", label="Go to My Pets & Schedule", icon="🐾")

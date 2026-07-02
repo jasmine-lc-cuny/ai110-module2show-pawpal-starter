@@ -468,6 +468,40 @@ def test_pet_from_dict_defaults_blood_type_to_none_for_old_data_without_it():
     assert pet.blood_type is None
 
 
+def test_pet_round_trips_profile_fields():
+    pet = Pet(
+        "Mochi",
+        "dog",
+        breed="Labrador Retriever",
+        height="24 in",
+        color_markings="Golden with white chest patch",
+        microchip_number="985121000000001",
+        spayed_neutered="Yes",
+        allergies="Chicken",
+        behavioral_notes="Friendly with strangers",
+        status="Alive",
+    )
+
+    loaded = Pet.from_dict(pet.to_dict())
+
+    assert loaded == pet
+
+
+def test_pet_from_dict_defaults_profile_fields_for_old_data_without_them():
+    old_style_data = {"name": "Mochi", "species": "dog", "age": 4, "tasks": []}
+
+    pet = Pet.from_dict(old_style_data)
+
+    assert pet.breed is None
+    assert pet.height is None
+    assert pet.color_markings is None
+    assert pet.microchip_number is None
+    assert pet.spayed_neutered is None
+    assert pet.allergies is None
+    assert pet.behavioral_notes is None
+    assert pet.status == "Alive"
+
+
 def test_find_owner_matches_case_insensitively():
     owners = [Owner("Jasmine"), Owner("John")]
 

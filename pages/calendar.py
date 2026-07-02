@@ -96,8 +96,8 @@ st.title("🗓️ Calendar")
 st.caption("Browse tasks by month, and drill into any day's full schedule.")
 
 if not owner.pets:
-    st.info('Add a pet from "My Pets & Schedule" to see their calendar here.')
-    st.page_link("pages/pets_and_schedule.py", label="Go to My Pets & Schedule", icon="🐾")
+    st.info("Add a pet to see their calendar here.")
+    st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
 else:
     if "calendar_month_offset" not in st.session_state:
         st.session_state.calendar_month_offset = 0

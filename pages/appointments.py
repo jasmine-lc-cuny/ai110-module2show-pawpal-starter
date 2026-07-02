@@ -5,11 +5,15 @@ import streamlit as st
 from pawpal_system import APPOINTMENT_STATUSES, Appointment, find_owner, format_time_12h
 from app_common import (
     APPOINTMENT_STATUS_COLORS,
+    CATEGORY_TASK_TITLES,
     get_clinic,
     get_owners,
     render_category_page,
+    render_veterinary_reason_picker,
     save_clinic,
 )
+
+VISIT_REASON_TITLES = CATEGORY_TASK_TITLES["veterinary"] + ["Other (custom)"]
 
 
 def _dialog_key(*parts) -> str:
@@ -39,6 +43,27 @@ def book_appointment_dialog(owners, clinic) -> None:
         format_func=lambda i: f"{patient_pairs[i][1].name} — owned by {patient_pairs[i][0].name}",
         key="book_appt_patient_select",
     )
+
+    # Same Task + species-aware Reason picker as the veterinary quick-add
+    # form above, so booking an appointment captures the same level of
+    # detail. key_prefix="book_appt_vet" keeps these widgets' keys distinct
+    # from that section's own "veterinary_*"-prefixed ones — both can be on
+    # screen in the same script run (this dialog floats over the page),
+    # so identical keys would crash with DuplicateWidgetID.
+    st.write("Reason for Visit")
+    visit_title = st.selectbox(
+        "Task", VISIT_REASON_TITLES, key="book_appt_vet_title_select", label_visibility="collapsed"
+    )
+    selected_species = patient_pairs[patient_index][1].species
+    if visit_title == "Other (custom)":
+        custom_reason = st.text_area("Custom reason", key="book_appt_vet_custom_reason")
+        visit_reason = None
+    else:
+        custom_reason = None
+        visit_reason = render_veterinary_reason_picker(
+            visit_title, selected_species, key_prefix="book_appt_vet"
+        )
+
     doctor_index = st.selectbox(
         "Doctor*",
         range(len(active_doctors)),
@@ -60,14 +85,18 @@ def book_appointment_dialog(owners, clinic) -> None:
     with period_col:
         period = st.selectbox("AM/PM", ["AM", "PM"], label_visibility="collapsed", key="book_appt_period")
 
-    reason = st.text_area("Reason", key="book_appt_reason")
-
     if st.button("Confirm Booking", key="book_appt_confirm"):
         hour_24 = hour_12 % 12
         if period == "PM":
             hour_24 += 12
         owner, pet = patient_pairs[patient_index]
         doctor = active_doctors[doctor_index]
+        if visit_title == "Other (custom)":
+            final_reason = (custom_reason or "").strip()
+        elif visit_reason:
+            final_reason = f"{visit_title}: {visit_reason}"
+        else:
+            final_reason = visit_title
         clinic.appointments.append(
             Appointment(
                 owner_name=owner.name,
@@ -75,7 +104,7 @@ def book_appointment_dialog(owners, clinic) -> None:
                 doctor_username=doctor.username,
                 date=appointment_date,
                 time=f"{hour_24:02d}:{minute}",
-                reason=reason.strip(),
+                reason=final_reason,
             )
         )
         save_clinic(clinic)
