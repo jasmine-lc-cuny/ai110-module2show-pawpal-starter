@@ -8,7 +8,7 @@ session, so the same Owner object is used no matter which page is active.
 
 import streamlit as st
 
-from app_common import get_owner, get_scheduler
+from app_common import get_owner, get_scheduler, render_owner_switcher
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
 
@@ -24,6 +24,7 @@ SERVICES = [
 
 def home_page():
     """Landing page: a service picker plus a quick glance at today's status."""
+    render_owner_switcher()
     owner = get_owner()
     scheduler = get_scheduler()
 
@@ -66,6 +67,7 @@ pg = st.navigation(
         "": [st.Page(home_page, title="Home", icon="🏠", url_path="home", default=True)],
         "Manage": [
             st.Page("pages/pets_and_schedule.py", title="My Pets & Schedule", icon="🐾"),
+            st.Page("pages/todays_schedule.py", title="Today's Schedule", icon="📅"),
         ],
         "Book a Service": [
             st.Page("pages/grooming.py", title="Grooming", icon="🛁"),

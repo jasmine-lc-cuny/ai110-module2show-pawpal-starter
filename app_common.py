@@ -4,9 +4,19 @@ from pathlib import Path
 
 import streamlit as st
 
-from pawpal_system import Owner, Scheduler, Task, format_time_12h, pet_species_icon, task_type_icon
+from pawpal_system import (
+    Owner,
+    Scheduler,
+    Task,
+    format_time_12h,
+    load_owners_from_json,
+    pet_species_icon,
+    save_owners_to_json,
+    task_type_icon,
+)
 
 DATA_PATH = Path("data.json")
+NEW_OWNER_CHOICE = "+ Add new owner"
 
 # Common care tasks offered in "Schedule a Task" dropdowns, covering every
 # category task_type_icon() recognizes, plus "Other (custom)" for anything else.
@@ -52,24 +62,93 @@ CATEGORY_TASK_TITLES = {
 }
 
 
-def get_owner() -> Owner:
-    """Return the session's owner, loading it from data.json once if needed."""
-    if "owner" not in st.session_state:
+def get_owners() -> list[Owner]:
+    """Return every owner in this session (e.g. different customers, each
+    with their own pets/tasks), loading them from data.json once if needed."""
+    if "owners" not in st.session_state:
         if DATA_PATH.exists():
-            st.session_state.owner = Owner.load_from_json(str(DATA_PATH))
+            st.session_state.owners = load_owners_from_json(str(DATA_PATH))
         else:
-            st.session_state.owner = Owner("Jordan")
-    return st.session_state.owner
+            st.session_state.owners = [Owner("Jordan")]
+        st.session_state.current_owner_index = 0
+    return st.session_state.owners
+
+
+def render_owner_switcher() -> None:
+    """Render the sidebar "Owner" picker. Call this exactly once near the top
+    of each page, before get_owner()/get_scheduler() — calling it twice in
+    the same run would register the same widget key twice and crash.
+
+    Without this, every pet/task ever added lands in one shared owner
+    record no matter whose name was typed into "Owner name", which is why
+    two different customers' pets used to show up mixed together.
+    """
+    owners = get_owners()
+
+    st.sidebar.subheader("Owner")
+    # Only pass index= on the very first render for this key. Once
+    # "owner_switcher" exists in session_state (set either by the user
+    # picking an option or by _create_owner()'s callback), Streamlit uses
+    # that value and warns if index= is passed alongside it.
+    index_kwargs = {}
+    if "owner_switcher" not in st.session_state:
+        current_index = st.session_state.current_owner_index
+        index_kwargs["index"] = current_index if current_index < len(owners) else 0
+
+    choice = st.sidebar.selectbox(
+        "Current owner",
+        list(range(len(owners))) + [NEW_OWNER_CHOICE],
+        format_func=lambda option: owners[option].name if isinstance(option, int) else option,
+        key="owner_switcher",
+        **index_kwargs,
+    )
+
+    if choice == NEW_OWNER_CHOICE:
+        st.sidebar.text_input("New owner name", key="new_owner_name")
+        # Mutating st.session_state["owner_switcher"] must happen in a
+        # callback (run by Streamlit before the script re-executes) — doing
+        # it inline here, after the selectbox above already instantiated
+        # that key this run, raises StreamlitAPIException.
+        st.sidebar.button("Create owner", key="create_owner_button", on_click=_create_owner, args=(owners,))
+    else:
+        st.session_state.current_owner_index = choice
+
+
+def _create_owner(owners: list[Owner]) -> None:
+    """Callback for the "Create owner" button: add a new owner and switch to them."""
+    new_owner_name = st.session_state.get("new_owner_name", "").strip()
+    if not new_owner_name:
+        return
+    owners.append(Owner(new_owner_name))
+    new_index = len(owners) - 1
+    st.session_state.current_owner_index = new_index
+    st.session_state.owner_switcher = new_index
+    save_owners(owners)
+
+
+def get_owner() -> Owner:
+    """Return the currently-selected owner. render_owner_switcher() must run
+    earlier in the page for the selection to reflect the sidebar."""
+    owners = get_owners()
+    index = st.session_state.get("current_owner_index", 0)
+    if index >= len(owners):
+        index = 0
+    return owners[index]
 
 
 def get_scheduler() -> Scheduler:
-    """Return a Scheduler for the session's owner."""
+    """Return a Scheduler for the currently-selected owner."""
     return Scheduler(get_owner())
 
 
+def save_owners(owners: list[Owner]) -> None:
+    """Persist every owner (and their pets/tasks) to data.json."""
+    save_owners_to_json(owners, str(DATA_PATH))
+
+
 def save_owner(owner: Owner) -> None:
-    """Persist the owner to data.json — call after any mutation, on every page."""
-    owner.save_to_json(str(DATA_PATH))
+    """Persist all owners to data.json — call after any mutation, on every page."""
+    save_owners(get_owners())
 
 
 def task_rows(task_pairs):
@@ -108,6 +187,7 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
     Full editing/deleting/reopening of any task still lives on the "My Pets
     & Schedule" page rather than being duplicated on every category page.
     """
+    render_owner_switcher()
     owner = get_owner()
     scheduler = get_scheduler()
 
@@ -203,6 +283,7 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
 def render_placeholder_page(display_name: str, icon: str) -> None:
     """Render a clearly-labeled "coming soon" page for a service category that
     doesn't have matching task types in TASK_TYPE_ICONS yet."""
+    render_owner_switcher()
     st.title(f"{icon} {display_name}")
     st.info(
         f"{display_name} isn't wired up to specific task types yet — this page "

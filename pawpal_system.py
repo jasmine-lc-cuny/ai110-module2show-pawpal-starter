@@ -245,6 +245,24 @@ class Owner:
             return cls.from_dict(json.load(file))
 
 
+def save_owners_to_json(owners: list[Owner], path: str) -> None:
+    """Persist multiple distinct owners (e.g. different customers, each with
+    their own pets/tasks) to one JSON file."""
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump({"owners": [owner.to_dict() for owner in owners]}, file, indent=2)
+
+
+def load_owners_from_json(path: str) -> list[Owner]:
+    """Load multiple owners from a JSON file, migrating an older
+    single-owner file (as written by Owner.save_to_json()) into a one-owner
+    list if that's what's found."""
+    with open(path, "r", encoding="utf-8") as file:
+        data = json.load(file)
+    if "owners" in data:
+        return [Owner.from_dict(owner_data) for owner_data in data["owners"]]
+    return [Owner.from_dict(data)]
+
+
 class Scheduler:
     """Organize and manage care tasks across an owner account."""
 
