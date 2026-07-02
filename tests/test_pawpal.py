@@ -34,6 +34,7 @@ def test_task_type_icon_heartworm_does_not_false_match_ear_substring():
 def test_pet_species_icon_varies_by_species():
     assert pet_species_icon("dog") == "🐕"
     assert pet_species_icon("cat") == "🐈"
+    assert pet_species_icon("bunny") == "🐰"
     assert pet_species_icon("Dog") == "🐕"
     assert pet_species_icon("other") == "🐾"
     assert pet_species_icon("iguana") == "🐾"

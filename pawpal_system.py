@@ -40,6 +40,7 @@ def task_type_icon(title: str) -> str:
 PET_SPECIES_ICONS = {
     "dog": "🐕",
     "cat": "🐈",
+    "bunny": "🐰",
 }
 
 

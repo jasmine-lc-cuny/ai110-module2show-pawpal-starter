@@ -88,7 +88,7 @@ with left:
     st.subheader("Pets")
     with st.form("add_pet_form", clear_on_submit=True):
         pet_name = st.text_input("Pet name")
-        species = st.selectbox("Species", ["dog", "cat", "other"])
+        species = st.selectbox("Species", ["dog", "cat", "bunny", "other"])
         age = st.number_input("Age", min_value=0, max_value=40, value=1)
         submitted_pet = st.form_submit_button("Add pet")
 
@@ -128,7 +128,7 @@ with left:
         )
         with st.form("edit_pet_form"):
             edited_name = st.text_input("Name", value=pet_to_edit.name)
-            species_options = ["dog", "cat", "other"]
+            species_options = ["dog", "cat", "bunny", "other"]
             edited_species = st.selectbox(
                 "Species",
                 species_options,
