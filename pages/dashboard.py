@@ -6,17 +6,10 @@ import pandas as pd
 import streamlit as st
 
 from pawpal_system import format_time_12h, pet_species_icon, task_type_icon
-from app_common import (
-    DOCUMENT_CATEGORIES,
-    PET_TIMELINE_COLORS,
-    delete_uploaded_document,
-    get_owners,
-    save_owners,
-    save_uploaded_document,
-)
+from app_common import PET_TIMELINE_COLORS, get_owners, save_owners
 
 VET_ICONS = {"🏥", "💊"}
-IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+PATIENTS_PER_PAGE = 8
 WINDOW_START_MIN, WINDOW_END_MIN = 6 * 60, 22 * 60
 WINDOW_SPAN_MIN = WINDOW_END_MIN - WINDOW_START_MIN
 
@@ -103,51 +96,6 @@ def render_appointment_reason_card(pet) -> None:
             st.write(reason_task.notes)
         else:
             st.caption("No notes yet.")
-
-
-def render_documents_card(owner, pet, pet_index: int) -> None:
-    """Render the documents card: categorized thumbnails plus upload/delete."""
-    with st.container(border=True):
-        st.markdown("**📄 Documents**")
-        for category in DOCUMENT_CATEGORIES:
-            docs_in_category = [doc for doc in pet.documents if doc.category == category]
-            if not docs_in_category:
-                continue
-            st.caption(category)
-            doc_cols = st.columns(min(len(docs_in_category), 4) or 1)
-            for doc_index, document in enumerate(docs_in_category):
-                with doc_cols[doc_index % len(doc_cols)]:
-                    if any(document.filename.lower().endswith(suffix) for suffix in IMAGE_SUFFIXES):
-                        st.image(document.path, caption=document.filename, use_container_width=True)
-                    else:
-                        st.write(f"📎 {document.filename}")
-
-        with st.form(f"upload_doc_form_{pet_index}", clear_on_submit=True):
-            upload_category = st.selectbox(
-                "Category", DOCUMENT_CATEGORIES, key=f"doc_category_{pet_index}"
-            )
-            uploaded_file = st.file_uploader("File", key=f"doc_file_{pet_index}")
-            submitted_upload = st.form_submit_button("Upload document")
-
-        if submitted_upload and uploaded_file is not None:
-            document = save_uploaded_document(owner, pet, upload_category, uploaded_file)
-            pet.documents.append(document)
-            st.success(f"Uploaded {document.filename}.")
-            st.rerun()
-
-        if pet.documents:
-            delete_doc_index = st.selectbox(
-                "Delete a document",
-                range(len(pet.documents)),
-                format_func=lambda idx: f"{pet.documents[idx].category} — {pet.documents[idx].filename}",
-                key=f"delete_doc_select_{pet_index}",
-            )
-            if st.button("Delete document", key=f"delete_doc_button_{pet_index}"):
-                document_to_delete = pet.documents[delete_doc_index]
-                delete_uploaded_document(document_to_delete)
-                pet.documents.pop(delete_doc_index)
-                st.success(f"Deleted {document_to_delete.filename}.")
-                st.rerun()
 
 
 def render_edit_profile(pet, pet_index: int) -> None:
@@ -304,8 +252,9 @@ if not pet_pairs:
     st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
 else:
     # Pill-style patient switcher (like the mockup's Tortilla/Noodle/Charlie
-    # bar). Duplicate pet names across different owners get the owner's name
-    # appended so two pills never look identical.
+    # bar), paginated so a large roster shows one row at a time. Duplicate
+    # pet names across different owners get the owner's name appended so two
+    # pills never look identical.
     name_counts = Counter(pet.name for _, pet in pet_pairs)
 
     def pill_label(index: int) -> str:
@@ -315,16 +264,62 @@ else:
             label += f" · {owner.name}"
         return label
 
-    selected_index = st.pills(
-        "Patient",
-        range(len(pet_pairs)),
-        format_func=pill_label,
-        default=0,
-        key="dashboard_pet_pills",
-        label_visibility="collapsed",
-    )
-    if selected_index is None:
-        selected_index = 0
+    if "dashboard_selected_pet" not in st.session_state:
+        st.session_state.dashboard_selected_pet = 0
+    if "dashboard_pill_page" not in st.session_state:
+        st.session_state.dashboard_pill_page = 0
+
+    total_pages = (len(pet_pairs) + PATIENTS_PER_PAGE - 1) // PATIENTS_PER_PAGE
+    pill_page = min(st.session_state.dashboard_pill_page, total_pages - 1)
+    page_start = pill_page * PATIENTS_PER_PAGE
+    page_options = list(range(page_start, min(page_start + PATIENTS_PER_PAGE, len(pet_pairs))))
+    # Each page gets its own widget key: reusing one key while the options
+    # list changes underneath it would leave a stale (now-invalid) value in
+    # session state and crash the pills widget on rerun.
+    page_pills_key = f"dashboard_pet_pills_{pill_page}"
+
+    def _select_pet_from_pills() -> None:
+        # on_change only fires on a real click (never on rerender), so this
+        # can't clobber a selection made on a different page the way an
+        # inline "if value != selection" sync would.
+        picked = st.session_state.get(page_pills_key)
+        if picked is not None:
+            st.session_state.dashboard_selected_pet = picked
+
+    nav_prev, nav_label, nav_next = st.columns([1, 6, 1])
+    with nav_prev:
+        if st.button("◀", key="pill_page_prev", disabled=pill_page == 0):
+            new_page = pill_page - 1
+            st.session_state.dashboard_pill_page = new_page
+            # Drop the destination page's old widget state so its pills
+            # re-render highlighting the current selection (or nothing),
+            # instead of a stale pick from an earlier visit.
+            st.session_state.pop(f"dashboard_pet_pills_{new_page}", None)
+            st.rerun()
+    with nav_label:
+        default_on_page = (
+            st.session_state.dashboard_selected_pet
+            if st.session_state.dashboard_selected_pet in page_options
+            else None
+        )
+        st.pills(
+            "Patient",
+            page_options,
+            format_func=pill_label,
+            default=default_on_page,
+            key=page_pills_key,
+            on_change=_select_pet_from_pills,
+            label_visibility="collapsed",
+        )
+        st.caption(f"Patients {page_start + 1}–{page_options[-1] + 1} of {len(pet_pairs)}")
+    with nav_next:
+        if st.button("▶", key="pill_page_next", disabled=pill_page >= total_pages - 1):
+            new_page = pill_page + 1
+            st.session_state.dashboard_pill_page = new_page
+            st.session_state.pop(f"dashboard_pet_pills_{new_page}", None)
+            st.rerun()
+
+    selected_index = min(st.session_state.dashboard_selected_pet, len(pet_pairs) - 1)
     selected_owner, selected_pet = pet_pairs[selected_index]
 
     top_row = st.columns(3)
@@ -341,7 +336,6 @@ else:
     with middle_row[1]:
         render_appointment_reason_card(selected_pet)
 
-    render_documents_card(selected_owner, selected_pet, selected_index)
     render_edit_profile(selected_pet, selected_index)
 
     st.divider()
