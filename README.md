@@ -36,28 +36,36 @@ python -m streamlit run app.py
 
 ## Sample Output
 
-Output from `python main.py`:
+Example output from running `python main.py`:
 
 ```text
 PawPal+ schedule for Jordan
 ================================
-Today's Schedule
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-06-23, open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-06-23, open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-06-23, open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-06-23, open)
+📅 Today's Schedule
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-01, ⏳ open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-01, ⏳ open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-01, ⏳ open)
 
 High Priority First
-  07:30 - Luna: Breakfast (10 min, high, daily, 2026-06-23, open)
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-06-23, open)
-  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-06-23, open)
-  08:00 - Luna: Brush coat (15 min, medium, once, 2026-06-23, open)
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-01, ⏳ open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-01, ⏳ open)
+  08:00 - Luna: Brush coat (15 min, medium, once, 2026-07-01, ⏳ open)
 
-Conflict Warnings
-  Conflict on 2026-06-23 at 08:00: Mochi: Morning walk, Luna: Brush coat
+🚨 Next Urgent Task
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
 
-Recurring Task Created
-  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-06-24, open)
+⭐ Today's Top 3 Priorities
+  07:30 - Luna: Breakfast (10 min, high, daily, 2026-07-01, ⏳ open)
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-01, ⏳ open)
+  12:00 - Mochi: Heartworm medication (5 min, high, once, 2026-07-01, ⏳ open)
+
+⚠️ Conflict Warnings
+  Conflict on 2026-07-01 at 08:00: Mochi: Morning walk, Luna: Brush coat
+
+🔁 Recurring Task Created
+  08:00 - Mochi: Morning walk (30 min, high, daily, 2026-07-02, ⏳ open)
 ```
 
 ## Smarter Scheduling
