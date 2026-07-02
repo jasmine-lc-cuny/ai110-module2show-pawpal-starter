@@ -67,7 +67,7 @@ def main():
     print_schedule("📅 Today's Schedule", scheduler.todays_schedule())
 
     print_schedule(
-        "High Priority First",
+        "❗ High Priority First",
         scheduler.sort_by_priority_then_time(scheduler.todays_schedule()),
     )
 
