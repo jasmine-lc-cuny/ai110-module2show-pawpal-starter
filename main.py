@@ -33,20 +33,19 @@ def print_schedule(title, task_pairs):
 
     rows = [
         [
-            task_type_icon(task.title),
             task.time,
             pet.name,
-            task.title,
+            f"{task_type_icon(task.title)} {task.title}",
             f"{task.duration_minutes} min",
             task.priority,
             task.frequency,
             task.due_date.isoformat(),
-            "✅ done" if task.completed else "⏳ open",
+            "done" if task.completed else "open",
         ]
         for pet, task in task_pairs
     ]
-    headers = ["", "Time", "Pet", "Task", "Duration", "Priority", "Frequency", "Due Date", "Status"]
-    print(tabulate(rows, headers=headers, tablefmt="rounded_outline"))
+    headers = ["Time", "Pet", "Task", "Duration", "Priority", "Frequency", "Due Date", "Status"]
+    print(tabulate(rows, headers=headers, tablefmt="github"))
     print()
 
 
