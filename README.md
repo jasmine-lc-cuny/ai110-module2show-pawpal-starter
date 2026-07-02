@@ -17,7 +17,7 @@ verified through `main.py` and pytest before being connected to the UI in
 - Surface today's single next urgent task and a top-3 priority shortlist.
 - Use a Streamlit interface backed by `st.session_state` so pets and tasks stay available during the browser session.
 - Persist all pets and tasks to `data.json` so they survive between application runs.
-- Show a different emoji per task type (walk, medication, feeding, grooming, vet), color-coded status messages in the Streamlit UI, and `tabulate`-rendered tables in the CLI.
+- Show a different emoji per task type (walk, medication, feeding, grooming, vet), color-coded status messages in the Streamlit UI, and `PrettyTable`-rendered tables in the CLI.
 
 ## Setup
 
@@ -45,48 +45,48 @@ Example output from running `python main.py`:
 PawPal+ schedule for Jordan
 ================================
 📅 Today's Schedule
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Mochi | 🐕 Morning walk         | 30 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Luna  | 🧼 Brush coat           | 15 min     | medium     | once        | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 High Priority First
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Mochi | 🐕 Morning walk         | 30 min     | high       | daily       | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
-| 08:00  | Luna  | 🧼 Brush coat           | 15 min     | medium     | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
 
 🚨 Next Urgent Task
-| Time   | Pet   | Task         | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|--------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast | 10 min     | high       | daily       | 2026-07-02 | open     |
+| Time  | Pet  | Task         | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :----| :------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna | 🍖 Breakfast | 10 min   | high     | daily     | 2026-07-02 | open   |
 
 ⭐ Today's Top 3 Priorities
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Mochi | 🐕 Morning walk         | 30 min     | high       | daily       | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 ⚠️ Conflict Warnings
   Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat
 
 🔁 Recurring Task Created
-| Time   | Pet   | Task            | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-----------------|------------|------------|-------------|------------|----------|
-| 08:00  | Mochi | 🐕 Morning walk | 30 min     | high       | daily       | 2026-07-03 | open     |
+| Time  | Pet   | Task            | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :---------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | 🐕 Morning walk | 30 min   | high     | daily     | 2026-07-03 | open   |
 
 💾 Saved to data.json and reloaded a fresh Owner from disk
 Reloaded Schedule (from data.json)
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Luna  | 🧼 Brush coat           | 15 min     | medium     | once        | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 ```
 
 ## Smarter Scheduling
@@ -153,48 +153,48 @@ Sample CLI output from `python main.py` (same run shown in the Sample Output sec
 PawPal+ schedule for Jordan
 ================================
 📅 Today's Schedule
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Mochi | 🐕 Morning walk         | 30 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Luna  | 🧼 Brush coat           | 15 min     | medium     | once        | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 High Priority First
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Mochi | 🐕 Morning walk         | 30 min     | high       | daily       | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
-| 08:00  | Luna  | 🧼 Brush coat           | 15 min     | medium     | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
+| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
 
 🚨 Next Urgent Task
-| Time   | Pet   | Task         | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|--------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast | 10 min     | high       | daily       | 2026-07-02 | open     |
+| Time  | Pet  | Task         | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :----| :------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna | 🍖 Breakfast | 10 min   | high     | daily     | 2026-07-02 | open   |
 
 ⭐ Today's Top 3 Priorities
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Mochi | 🐕 Morning walk         | 30 min     | high       | daily       | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Mochi | 🐕 Morning walk         | 30 min   | high     | daily     | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 
 ⚠️ Conflict Warnings
   Conflict on 2026-07-02 at 08:00: Mochi: Morning walk, Luna: Brush coat
 
 🔁 Recurring Task Created
-| Time   | Pet   | Task            | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-----------------|------------|------------|-------------|------------|----------|
-| 08:00  | Mochi | 🐕 Morning walk | 30 min     | high       | daily       | 2026-07-03 | open     |
+| Time  | Pet   | Task            | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :---------------| :--------| :--------| :---------| :----------| :------|
+| 08:00 | Mochi | 🐕 Morning walk | 30 min   | high     | daily     | 2026-07-03 | open   |
 
 💾 Saved to data.json and reloaded a fresh Owner from disk
 Reloaded Schedule (from data.json)
-| Time   | Pet   | Task                    | Duration   | Priority   | Frequency   | Due Date   | Status   |
-|--------|-------|-------------------------|------------|------------|-------------|------------|----------|
-| 07:30  | Luna  | 🍖 Breakfast            | 10 min     | high       | daily       | 2026-07-02 | open     |
-| 08:00  | Luna  | 🧼 Brush coat           | 15 min     | medium     | once        | 2026-07-02 | open     |
-| 12:00  | Mochi | 💊 Heartworm medication | 5 min      | high       | once        | 2026-07-02 | open     |
+| Time  | Pet   | Task                    | Duration | Priority | Frequency | Due Date   | Status |
+| :-----| :-----| :-----------------------| :--------| :--------| :---------| :----------| :------|
+| 07:30 | Luna  | 🍖 Breakfast            | 10 min   | high     | daily     | 2026-07-02 | open   |
+| 08:00 | Luna  | 🧼 Brush coat           | 15 min   | medium   | once      | 2026-07-02 | open   |
+| 12:00 | Mochi | 💊 Heartworm medication | 5 min    | high     | once      | 2026-07-02 | open   |
 ```
 
 ## Optional Challenges
@@ -204,7 +204,7 @@ Reloaded Schedule (from data.json)
 | 1. Advanced algorithmic capability | ✅ Done | `Scheduler.next_urgent_task()` and `Scheduler.top_priorities(n)` add a distinct ranking capability beyond the four base requirements. See the "Agent Workflow" section in `ai_interactions.md`. |
 | 2. Data persistence (JSON) | ✅ Done | `Owner.save_to_json()`/`Owner.load_from_json()` (see Data Persistence section above); pets/tasks survive both `main.py` runs and Streamlit restarts via `data.json`. |
 | 3. Advanced priority scheduling | ✅ Done | `Task.priority` (`low`/`medium`/`high`) plus `Scheduler.sort_by_priority_then_time()`; see "High Priority First" in the Sample Output above. |
-| 4. Professional UI/output formatting | ✅ Done | All three suggested formats, all real: **(a) emojis per task type** — `task_type_icon()` in `pawpal_system.py` maps task-title keywords to a different icon (🐕 walk, 💊 medication, 🍖 feeding, 🧼 grooming, 🏥 vet), shown inline in the Task column of every CLI table and in a `Type` column in `app.py`'s `task_rows()` (Streamlit table). Plus `main.py` section headers (📅 🚨 ⭐ ⚠️ 🔁). **(b) color-coded status indicators** — the Streamlit UI uses `st.success()`/`st.warning()`/`st.info()` for pet/task confirmations, conflict warnings, and empty states; Streamlit renders each with a distinct background color (green/yellow/blue). **(c) structured CLI tables** — `main.py`'s `print_schedule()` renders every schedule section with `tabulate(rows, headers=..., tablefmt="github")` (the `tabulate` library, added to `requirements.txt`) instead of plain printed lines; see the pipe-style tables in the Sample Output above. (Switched from a Unicode box-drawing format to plain ASCII pipes/dashes after noticing emoji glyphs render wider than one monospace column in some viewers, which broke the box borders — the pipe format degrades to slightly uneven spacing instead of a visibly broken table.) |
+| 4. Professional UI/output formatting | ✅ Done | All three suggested formats, all real: **(a) emojis per task type** — `task_type_icon()` in `pawpal_system.py` maps task-title keywords to a different icon (🐕 walk, 💊 medication, 🍖 feeding, 🧼 grooming, 🏥 vet), shown inline in the Task column of every CLI table and in a `Type` column in `app.py`'s `task_rows()` (Streamlit table). Plus `main.py` section headers (📅 🚨 ⭐ ⚠️ 🔁). **(b) color-coded status indicators** — the Streamlit UI uses `st.success()`/`st.warning()`/`st.info()` for pet/task confirmations, conflict warnings, and empty states; Streamlit renders each with a distinct background color (green/yellow/blue). **(c) structured CLI tables** — `main.py`'s `print_schedule()` builds a `prettytable.PrettyTable`, styled with `TableStyle.MARKDOWN` (the `prettytable` library, added to `requirements.txt`), instead of plain printed lines; see the pipe-style tables in the Sample Output above. (Originally used `tabulate` with a Unicode box-drawing format and a separate icon-only column; switched away after noticing emoji glyphs render wider than one monospace column in some viewers, which broke the box borders and clipped the "Status" header. Folding the icon into the Task column and using a pipe-only style — first via `tabulate`'s `github` format, now via `PrettyTable`'s `MARKDOWN` style — means any remaining width drift degrades to slightly uneven spacing instead of a visibly broken table.) |
 | 5. Multi-model prompt comparison | ✅ Done | Compared Codex vs. Claude on rescheduling late-completed weekly tasks; see the "Prompt Comparison" section in `ai_interactions.md`. The winning hybrid approach was adopted into `Task.next_occurrence()`/`Scheduler.mark_task_complete()`. |
 
 ## Architecture

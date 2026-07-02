@@ -1,6 +1,6 @@
 from datetime import date
 
-from tabulate import tabulate
+from prettytable import PrettyTable, TableStyle
 
 from pawpal_system import Owner, Pet, Scheduler, Task, task_type_icon
 
@@ -25,27 +25,34 @@ def build_demo_owner():
 
 
 def print_schedule(title, task_pairs):
-    """Print a schedule section as a formatted table using tabulate."""
+    """Print a schedule section as a formatted table using PrettyTable."""
     print(title)
     if not task_pairs:
         print("  No tasks found.\n")
         return
 
-    rows = [
-        [
-            task.time,
-            pet.name,
-            f"{task_type_icon(task.title)} {task.title}",
-            f"{task.duration_minutes} min",
-            task.priority,
-            task.frequency,
-            task.due_date.isoformat(),
-            "done" if task.completed else "open",
-        ]
-        for pet, task in task_pairs
-    ]
-    headers = ["Time", "Pet", "Task", "Duration", "Priority", "Frequency", "Due Date", "Status"]
-    print(tabulate(rows, headers=headers, tablefmt="github"))
+    # MARKDOWN style uses plain "|"/"-" characters with no connecting box
+    # corners, so if an emoji ever renders wider than one monospace column
+    # in a given viewer, the row just gets slightly uneven spacing instead
+    # of a visibly broken border (unlike a full box-drawing style).
+    table = PrettyTable()
+    table.field_names = ["Time", "Pet", "Task", "Duration", "Priority", "Frequency", "Due Date", "Status"]
+    table.set_style(TableStyle.MARKDOWN)
+    table.align = "l"
+    for pet, task in task_pairs:
+        table.add_row(
+            [
+                task.time,
+                pet.name,
+                f"{task_type_icon(task.title)} {task.title}",
+                f"{task.duration_minutes} min",
+                task.priority,
+                task.frequency,
+                task.due_date.isoformat(),
+                "done" if task.completed else "open",
+            ]
+        )
+    print(table)
     print()
 
 
