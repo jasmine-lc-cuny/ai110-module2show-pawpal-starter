@@ -1,9 +1,5 @@
 """Shared state and UI helpers used across every page of the multi-page app."""
 
-# ==========================================
-# 📦 IMPORTS & SYSTEM PATHS
-# Defines where the app looks for files and tools
-# ==========================================
 import re
 import uuid
 from datetime import date
@@ -21,106 +17,6 @@ from pawpal_system import (
     format_time_12h,
     load_owners_from_json,
     pet_species_icon,
-)
-from datetime import date, datetime
-from pathlib import Path
-from pawpal_system import load_owners_from_json, save_owners_to_json, Task
-
-DATA_PATH = "data.json"
-
-st.set_page_config(page_title="Services Dashboard", page_icon="🛎️", layout="wide")
-
-st.title("🛎️ Services & Booking Dashboard")
-st.markdown("Welcome to the PawPal+ Services Hub! Book and manage specialized care for your patients.")
-
-# Load Database
-owners = []
-if Path(DATA_PATH).exists():
-    owners = load_owners_from_json(DATA_PATH)
-
-# 1. Quick Metrics
-st.subheader("At a Glance")
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric(label="Grooming Slots", value="12 Available")
-with col2:
-    st.metric(label="Walking Routes", value="5 Active")
-with col3:
-    st.metric(label="Sitting Capacity", value="85% Full")
-with col4:
-    st.metric(label="Training Classes", value="3 Today")
-
-st.divider()
-
-# 2. Booking Form
-st.subheader("🗓️ Book a New Service")
-
-# Build options
-pet_options = []
-pet_map = {}
-for owner in owners:
-    for pet in owner.pets:
-        label = f"{pet.name} ({pet.species.capitalize()}) - Owner: {owner.name}"
-        pet_options.append(label)
-        pet_map[label] = (owner, pet)
-
-if not pet_options:
-    st.warning("No patients found in the database. Please add a patient first.")
-else:
-    with st.form("book_service_form"):
-        selected_pet_label = st.selectbox("Select Patient", options=pet_options)
-        
-        service_type = st.selectbox("Service Category", [
-            "Grooming (Wash/Cut)", 
-            "Dog Walking", 
-            "Pet Sitting", 
-            "Training Session", 
-            "Veterinary Exam",
-            "Exotic Habitat Setup"
-        ])
-        
-        col_date, col_time = st.columns(2)
-        with col_date:
-            service_date = st.date_input("Date", value=date.today())
-        with col_time:
-            service_time = st.time_input("Time", value=datetime.strptime("10:00", "%H:%M").time())
-            
-        priority = st.selectbox("Priority", ["low", "medium", "high"])
-        notes = st.text_area("Additional Notes (e.g., special shampoo, behavioral quirks, tank temp)")
-        
-        submitted = st.form_submit_button("Book Service", type="primary")
-        
-        if submitted:
-            owner, pet = pet_map[selected_pet_label]
-            
-            # Create a new Task
-            new_task = Task(
-                title=service_type,
-                time=service_time.strftime("%H:%M"),
-                duration_minutes=60,
-                priority=priority,
-                frequency="once",
-                notes=notes
-            )
-            # Hack the due date to match the form
-            new_task.due_date = service_date
-            
-            pet.add_task(new_task)
-            save_owners_to_json(owners, DATA_PATH)
-            
-            st.success(f"🎉 Successfully booked **{service_type}** for {pet.name} on {service_date.strftime('%b %d')} at {service_time.strftime('%I:%M %p')}!")
-
-st.divider()
-
-# 3. Service Categories Info
-st.subheader("Explore Service Departments")
-cat1, cat2, cat3 = st.columns(3)
-with cat1:
-    st.info("✂️ **Grooming**\n\nFull-service washes, haircuts, nail trimming, and ear cleaning for all species.")
-with cat2:
-    st.success("🦮 **Walking & Exercise**\n\nDaily walking routes and designated playtime for energetic pets.")
-with cat3:
-    st.warning("🧠 **Training**\n\nObedience and behavioral classes, featuring specialized exotic handling.")
     priority_icon,
     save_owners_to_json,
     task_type_icon,
@@ -131,13 +27,6 @@ CLINIC_DATA_PATH = Path("clinic.json")
 UPLOADS_PATH = Path("uploads")
 NEW_OWNER_CHOICE = "+ Add new owner"
 
-# ==========================================
-# 🗄️ GLOBAL CONFIGURATION & MENUS
-# Stores all the fixed lists, colors, and dictionary data 
-# used to populate dropdowns across the app
-# ==========================================
-
-# st.badge() color per Appointment.status, matching the mockup's palette.
 APPOINTMENT_STATUS_COLORS = {
     "Pending": "yellow",
     "Confirmed": "blue",
@@ -145,7 +34,6 @@ APPOINTMENT_STATUS_COLORS = {
     "Cancelled": "red",
 }
 
-# Categories offered when uploading a Document
 DOCUMENT_CATEGORIES = [
     "Digital radiography",
     "Dental digital x-ray",
@@ -153,51 +41,95 @@ DOCUMENT_CATEGORIES = [
     "Other",
 ]
 
-# Colors for the weekly-schedule timeline
 PET_TIMELINE_COLORS = [
-    "#3B5BDB",  # indigo
-    "#099268",  # teal
-    "#E8590C",  # orange
-    "#C2255C",  # pink
-    "#6741D9",  # violet
-    "#0C8599",  # cyan
-    "#E03131",  # red
-    "#5C940D",  # lime
+    "#3B5BDB",
+    "#099268",
+    "#E8590C",
+    "#C2255C",
+    "#6741D9",
+    "#0C8599",
+    "#E03131",
+    "#5C940D",
 ]
 
-# Common care tasks offered in "Schedule a Task" dropdowns
 COMMON_TASK_TITLES = [
-    "Morning Walk", "Afternoon Walk", "Evening Walk", 
-    "Breakfast", "Lunch", "Dinner", 
-    "Give Medication", "Heartworm Prevention", "Vet Appointment", 
-    "X-Ray", "Injection Medication", "Injection Vaccine", 
-    "Injection Subcutaneous", "Injection Intramuscular", "Injection Intravenous", 
-    "Blood Work", "Surgery", "Brush Coat", "Wash / Bath", "Hair Cut", 
-    "Trim Nails", "Ear Cleaning", "Teeth Brushing", "Playtime",
+    "Morning Walk",
+    "Afternoon Walk",
+    "Evening Walk",
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Give Medication",
+    "Heartworm Prevention",
+    "Vet Appointment",
+    "X-Ray",
+    "Injection Medication",
+    "Injection Vaccine",
+    "Injection Subcutaneous",
+    "Injection Intramuscular",
+    "Injection Intravenous",
+    "Blood Work",
+    "Surgery",
+    "Brush Coat",
+    "Wash / Bath",
+    "Hair Cut",
+    "Trim Nails",
+    "Ear Cleaning",
+    "Teeth Brushing",
+    "Playtime",
 ]
 
-# Sub-options offered on the veterinary quick-add form (Task.notes)
 VETERINARY_TASK_REASONS = {
     "Give Medication": ["Heartworm Prevention", "Antibiotics"],
     "X-Ray": ["Hip"],
     "Blood Work": [
-        "Complete Blood Count (CBC)", "Serum Chemistry", "Thyroid Panel",
-        "Electrolyte Panel", "Pre-Anesthetic Panel", "Coagulation Profile",
+        "Complete Blood Count (CBC)",
+        "Serum Chemistry",
+        "Thyroid Panel",
+        "Electrolyte Panel",
+        "Pre-Anesthetic Panel",
+        "Coagulation Profile",
     ],
-    "Injection Subcutaneous": ["Routine Vaccines", "Maintenance Medications (e.g. Insulin)", "Fluid Therapy"],
-    "Injection Intramuscular": ["Pain Management", "Sedatives and Tranquilizers", "Antibiotics"],
-    "Injection Intravenous": ["General Anesthesia", "Emergency Medications", "Chemotherapy", "Continuous Fluid Therapy"],
+    "Injection Subcutaneous": [
+        "Routine Vaccines",
+        "Maintenance Medications (e.g. Insulin)",
+        "Fluid Therapy",
+    ],
+    "Injection Intramuscular": [
+        "Pain Management",
+        "Sedatives and Tranquilizers",
+        "Antibiotics",
+    ],
+    "Injection Intravenous": [
+        "General Anesthesia",
+        "Emergency Medications",
+        "Chemotherapy",
+        "Continuous Fluid Therapy",
+    ],
 }
 
-# Sub-options that differ by species
 VETERINARY_TASK_REASONS_BY_SPECIES = {
     "Injection Vaccine": {
         "dog": ["Rabies", "Distemper", "Parvovirus", "Adenovirus"],
         "cat": ["Rabies", "Panleukopenia", "Calicivirus", "Herpesvirus"],
     },
     "Surgery": {
-        "dog": ["Neuter", "Dental Extractions", "Mass/Tumor Removals", "Gastrointestinal Surgeries", "Exploratory Laparotomy", "C-Section"],
-        "cat": ["Spay", "Dental Extractions", "Mass/Tumor Removals", "Gastrointestinal Surgeries", "Exploratory Laparotomy", "C-Section"],
+        "dog": [
+            "Neuter",
+            "Dental Extractions",
+            "Mass/Tumor Removals",
+            "Gastrointestinal Surgeries",
+            "Exploratory Laparotomy",
+            "C-Section",
+        ],
+        "cat": [
+            "Spay",
+            "Dental Extractions",
+            "Mass/Tumor Removals",
+            "Gastrointestinal Surgeries",
+            "Exploratory Laparotomy",
+            "C-Section",
+        ],
     },
 }
 
@@ -217,66 +149,27 @@ INJECTION_MEDICATION_OPTIONS = {
     "Antibiotics & General Treatment": ["Convenia (cefovecin sodium)", "Injectable Insulin (Vetsulin or ProZinc)"],
 }
 
-# The Dog Cafes menu
 A_LA_BARK_MENU = [
     (
         "🍔 Pooch Pub Grub",
-        "Hearty, warm, and savory meals for the hungriest pups.",
+        "Hearty meals for big appetites",
         [
-            ("Mini Paw Burger & Sliders", "$6.50", "Small beef patties served with a side of steamed veggies."),
-            ("The Bark-B-Q Platter", "$8.50", "Slow-cooked, shredded chicken or beef with a drizzle of dog-safe bone broth."),
-            ("Shepherd’s Pie for Paws", "$7.25", "Lean ground meat topped with a layer of mashed sweet potato and peas."),
-            ("Barkingly Good Beef Supper", "$5.00", "A warm meal of ground beef, brown rice, and vegetables."),
-            ("Waggingly Delicious Chicken Dinner", "$5.00", "Slow-cooked chicken in doggy gravy with crushed potatoes and vegetables."),
-            ("Doggy Bowl", "$7.00", "A full meal featuring turkey, brown rice, corn, peas, green beans, and carrots."),
+            ("Pawsta Primavera", "$12", "Pasta with chicken and veggies"),
+            ("Bark-B-Q Plate", "$15", "Slow-cooked beef with a smoky glaze"),
+            ("Tail-Wag Tacos", "$11", "Soft tacos with turkey and rice"),
         ],
     ),
     (
-        "🧁 Poodings & Paws-tisserie",
-        "Sweet, decadent treats and baked goods to finish off the perfect outing.",
+        "🥗 Fresh Bites",
+        "Light, healthy treats",
         [
-            ("Pup-Cake Delight", "$3.75", "A single-serve cupcake topped with sugar-free yogurt icing and a biscuit crumble."),
-            ("Pupcake", "$3.20", "A classic baked treat."),
-            ("Doggy Doughnut", "$3.20", "A sweet ring-shaped baked good."),
-            ("Doggy Éclair", "$3.84", "A specialty pastry-style treat."),
-            ("Iced Bone", "$3.20", "A crunchy, frosted biscuit bone."),
-        ],
-    ),
-    (
-        "🍦 Frosty Furs & Chillers",
-        "Refreshing, icy, and creamy delights for hot days.",
-        [
-            ("Bark-A-Licious Gelato", "$4.50", "A generous scoop of peanut butter or banana-flavored doggy ice cream."),
-            ("Frosty Paws Ice Cream Cup", "$4.99", "A cool, wholesome treat containing essential vitamins, minerals, and protein."),
-            ("Whipped Cream \"Pup-Tini\"", "$2.50", "A small, fluffy cup of fresh whipped cream served with a crunchy bone-shaped cookie."),
-            ("Doggie Frap", "$1.89", "A small bowl of homemade whipped cream."),
-            ("Puppuccino", "$2.56", "A bowl of freshly chilled goat’s milk."),
-        ],
-    ),
-    (
-        "🦴 Snack-Attack Nibbles",
-        "Small, quick bites perfect for training or snacking.",
-        [
-            ("Lil' Nibbles", "$0.63–$3.19", "Smaller snacks including chicken breast, sausages, biscuits, or a Yorkie puddin'."),
-            ("Veggie Snacks", "$3.00", "A healthy mix of apples, carrots, and cucumbers."),
-            ("Scooby Snacks", "$4.00", "A treat made with pumpkin, peanut butter, milk, and oats."),
-            ("Bon A-Pet Treat", "$2.00", "Homemade peanut butter bone-shaped biscuits."),
-        ],
-    ),
-    (
-        "🍺 The Wet Bar (For Canines)",
-        "Non-alcoholic, dog-safe beverages.",
-        [
-            ("Dog Beer", "$3.84", "A refreshing, non-alcoholic brew."),
-            ("Bottom Sniffer Beer", "$4.93", "A specialized doggy beer."),
-            ("Pawsacco", "$3.84", "A specialized herbal blend."),
-            ("Doggy Afternoon Tea", "$8.96", "Specialized blends for oral health or skin and coat support."),
+            ("Garden Bowl", "$9", "Fresh greens with lean protein"),
+            ("Turkey Treat Wrap", "$10", "Wrapped turkey and veggies"),
+            ("Snack Stack", "$8", "Small, quick bites perfect for training or snacking."),
         ],
     ),
 ]
 
-# The five bookable service sections staff can be assigned to. Kept here so the
-# staff page, the seeder, and the home-page service picker share one list.
 SERVICE_SECTIONS = [
     ("🛁", "Grooming"),
     ("🏠", "Sitting"),
@@ -288,10 +181,9 @@ SERVICE_SECTIONS = [
 COMMON_SERVICES = [
     ("Blood Work", 45.0),
     ("X-Ray", 100.0),
-    ("Injection Medication", 25.0),
-    ("Surgery", 500.0),
-    ("Vaccination", 30.0),
-    ("Dental Cleaning", 80.0),
+    ("Checkup", 75.0),
+    ("Vaccination", 65.0),
+    ("Dental Cleaning", 180.0),
     ("Spay/Neuter", 250.0),
 ]
 
@@ -310,15 +202,21 @@ CATEGORY_TASK_TITLES = {
     "sitting": ["Day Sitting", "Overnight Sitting", "Drop-In Visit", "House Sitting"],
     "training": ["Obedience Training", "Puppy Class", "Leash Training", "Trick Training"],
     "veterinary": [
-        "Give Medication", "Heartworm Prevention", "Vet Appointment", "X-Ray",
-        "Injection Medication", "Injection Vaccine", "Injection Subcutaneous",
-        "Injection Intramuscular", "Injection Intravenous", "Blood Work", "Surgery",
+        "Give Medication",
+        "Heartworm Prevention",
+        "Vet Appointment",
+        "X-Ray",
+        "Injection Medication",
+        "Injection Vaccine",
+        "Injection Subcutaneous",
+        "Injection Intramuscular",
+        "Injection Intravenous",
+        "Blood Work",
+        "Surgery",
     ],
     "special_services": ["Breakfast", "Lunch", "Dinner"],
 }
 
-# Maps a service-page category key to its staff section label (SERVICE_SECTIONS),
-# so a booking form can offer the staff assigned to that service.
 CATEGORY_TO_SECTION = {
     "grooming": "Grooming",
     "sitting": "Sitting",
@@ -330,7 +228,6 @@ CATEGORY_TO_SECTION = {
 # ==========================================
 # 💾 STATE MANAGEMENT & DATA PERSISTENCE
 # ==========================================
-
 def get_owners() -> list[Owner]:
     if "owners" not in st.session_state:
         if DATA_PATH.exists():
