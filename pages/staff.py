@@ -112,7 +112,7 @@ if clinic.staff:
         st.success(f"Deleted {removed.full_name}.")
         st.rerun()
 else:
-    st.info("No staff yet. Add one above, or run `python seed_staff.py` to seed the team.")
+    st.info("No staff yet. Add one above, or run `python -m seed.seed_staff` to seed the team.")
 
 # No render-time save: mutations save inline. A render-time save would let a
 # stale browser session silently overwrite the data file just by sitting open.

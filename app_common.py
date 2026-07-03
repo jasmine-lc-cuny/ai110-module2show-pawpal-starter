@@ -307,22 +307,22 @@ def ensure_demo_data() -> None:
         return
 
     if owners_missing_or_empty:
-        from seed_animals_list import seed_animals_list
+        from seed.seed_animals_list import seed_animals_list
 
         seed_animals_list()
 
     if staff_missing:
-        from seed_staff import seed_staff
+        from seed.seed_staff import seed_staff
 
         seed_staff()
 
     if doctors_missing:
-        from seed_doctors import seed_doctors
+        from seed.seed_doctors import seed_doctors
 
         seed_doctors()
 
     if owners_missing_or_empty or tasks_missing:
-        from seed_schedules import seed_schedules
+        from seed.seed_schedules import seed_schedules
 
         seed_schedules()
 
