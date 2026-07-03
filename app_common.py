@@ -536,41 +536,75 @@ def render_category_page(
     else:
         st.subheader(f"Schedule a {display_name} Task")
 
-        # --- NEW: Species Filter Toggle ---
-        species_filter = st.radio(
-            "Filter by Species",
-            ["All", "🐕 Dogs", "🐈 Cats"],
+        # --- CASCADING SPECIES GROUP & SPECIES FILTER ---
+        PET_CATEGORIES = {
+            "🐶 General Companion": ["dog", "cat"],
+            "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
+            "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
+            "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
+            "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
+        }
+
+        group_options = ["All Groups"] + list(PET_CATEGORIES.keys())
+        selected_group = st.radio(
+            "Filter by Species Group",
+            options=group_options,
             horizontal=True,
-            key=f"{category}_species_filter"
+            key=f"{category}_group_filter"
         )
 
-        # Map the radio choice back to your core data strings
-        filter_map = {"🐕 Dogs": "dog", "🐈 Cats": "cat"}
-        target_species = filter_map.get(species_filter)
-
-        # 1. Filter owners down to ONLY those who have pets matching the selected species
-        if target_species:
-            owners_with_pets = [
-                candidate for candidate in get_owners() 
-                if any(pet.species.lower() == target_species for pet in candidate.pets)
-            ]
+        # Determine which specific species to show based on the chosen group
+        if selected_group == "All Groups":
+            allowed_species = None
         else:
-            owners_with_pets = [candidate for candidate in get_owners() if candidate.pets]
+            raw_species_list = PET_CATEGORIES[selected_group]
+            
+            # Format the options cleanly with their icons (e.g., "🐕 Dog")
+            species_options = ["All"] + [f"{pet_species_icon(s)} {s.capitalize()}" for s in raw_species_list]
+            
+            selected_species_label = st.radio(
+                "Filter by Species",
+                options=species_options,
+                horizontal=True,
+                key=f"{category}_species_filter"
+            )
+            
+            if selected_species_label == "All":
+                allowed_species = raw_species_list
+            else:
+                # Extract the pure string back out (e.g., pulling "dog" from "🐕 Dog")
+                target = selected_species_label.split(" ", 1)[-1].lower()
+                allowed_species = [target]
 
-        # Reset the owner index state safely if the list shrinks and the index goes out of bounds
+        # 1. Filter owners down to ONLY those who have pets matching the active filters
+        owners_with_pets = []
+        for candidate in get_owners():
+            if not candidate.pets:
+                continue
+            
+            has_matching_pet = False
+            for pet in candidate.pets:
+                if allowed_species is None or pet.species.lower() in allowed_species:
+                    has_matching_pet = True
+                    break
+            
+            if has_matching_pet:
+                owners_with_pets.append(candidate)
+
+        # Reset the owner index state safely if the list shrinks out of bounds
         if f"{category}_owner_index_state" not in st.session_state or st.session_state[f"{category}_owner_index_state"] >= len(owners_with_pets):
             st.session_state[f"{category}_owner_index_state"] = 0
 
         if not owners_with_pets:
-            st.info(f"No owners currently have a {target_species} registered.")
+            st.info("No owners currently have a pet matching this filter.")
         else:
             selected_owner = owners_with_pets[st.session_state[f"{category}_owner_index_state"]]
             
             # 2. Filter the pet labels list to match the target species as well
-            filtered_pets = [
-                (i, pet) for i, pet in enumerate(selected_owner.pets)
-                if not target_species or pet.species.lower() == target_species
-            ]
+            filtered_pets = []
+            for i, pet in enumerate(selected_owner.pets):
+                if allowed_species is None or pet.species.lower() in allowed_species:
+                    filtered_pets.append((i, pet))
             
             pet_labels = [
                 f"{i + 1}. {pet_species_icon(pet.species)} {pet.name} ({pet.species})"
@@ -581,18 +615,32 @@ def render_category_page(
                 f"{i + 1}. {candidate.name}" for i, candidate in enumerate(owners_with_pets)
             ]
 
-            # --- ROW 1: Pet then Owner (Now Filtering Dynamically!) ---
+            # --- ROW 1: Owner then Pet ---
             col1, col2 = st.columns(2)
             
             with col1:
+                selected_owner_index = st.selectbox(
+                    "Owner",
+                    range(len(owners_with_pets)),
+                    format_func=lambda i: owner_labels[i],
+                    key=f"{category}_owner_select",
+                )
+                if selected_owner_index != st.session_state[f"{category}_owner_index_state"]:
+                    st.session_state[f"{category}_owner_index_state"] = selected_owner_index
+                    st.rerun()
+
+            with col2:
                 # Map the selected filtered index back to the real index in owner.pets
                 selected_filtered_index = st.selectbox(
                     "Pet",
                     range(len(filtered_pets)),
                     format_func=lambda i: pet_labels[i],
-                    key=f"{category}_pet_select_{st.session_state[f'{category}_owner_index_state']}_{species_filter}",
+                    key=f"{category}_pet_select_{st.session_state[f'{category}_owner_index_state']}_{selected_group}",
                 )
                 selected_pet_index = filtered_pets[selected_filtered_index][0]
+
+            # --- ROW 2: Task then Reason ---
+            # (The rest of your code starting with col3, col4 = st.columns(2) remains exactly the same!)
 
             with col2:
                 selected_owner_index = st.selectbox(

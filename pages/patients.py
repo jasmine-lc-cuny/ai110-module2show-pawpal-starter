@@ -3,7 +3,18 @@ import streamlit as st
 from pawpal_system import Owner, Pet, pet_species_icon
 from app_common import NEW_OWNER_CHOICE, get_owners, save_owners
 
-SPECIES_OPTIONS = ["dog", "cat", "bunny", "other"]
+# ==========================================
+# 🐾 MASTER SPECIES ARCHITECTURE
+# ==========================================
+PET_CATEGORIES = {
+    "🐶 General Companion": ["dog", "cat"],
+    "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
+    "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
+    "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
+    "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
+}
+
+GROUP_OPTIONS = list(PET_CATEGORIES.keys())
 SEX_OPTIONS = ["Female", "Male"]
 SPAYED_NEUTERED_OPTIONS = ["Unknown", "Yes", "No"]
 STATUS_OPTIONS = ["Alive", "Deceased"]
@@ -43,18 +54,36 @@ else:
         else None
     )
 
+    # --- CASCADING SPECIES LOGIC (REGISTRATION) ---
+    selected_reg_group = st.selectbox(
+        "Species Group*", 
+        GROUP_OPTIONS, 
+        key="reg_species_group_select"
+    )
+    
+    reg_allowed_species = sorted(PET_CATEGORIES[selected_reg_group])
+    if "other" not in reg_allowed_species:
+        reg_allowed_species.append("other")
+
     with st.form("register_patient_form", clear_on_submit=True):
         st.markdown("**Basic Info**")
-        basic_cols = st.columns(4)
+        basic_cols = st.columns(3)
         with basic_cols[0]:
             pet_name = st.text_input("Name*")
         with basic_cols[1]:
-            pet_species = st.selectbox("Species*", SPECIES_OPTIONS)
+            pet_species = st.selectbox(
+                "Species*", 
+                reg_allowed_species, 
+                format_func=lambda s: s.capitalize()
+            )
         with basic_cols[2]:
             pet_breed = st.text_input("Breed")
-        with basic_cols[3]:
+            
+        basic_cols_2 = st.columns(2)
+        with basic_cols_2[0]:
             pet_age = st.number_input("Age", min_value=0, max_value=40, value=1)
-        pet_sex = st.selectbox("Sex*", SEX_OPTIONS)
+        with basic_cols_2[1]:
+            pet_sex = st.selectbox("Sex*", SEX_OPTIONS)
 
         st.markdown("**Physical Traits**")
         physical_cols = st.columns(3)
@@ -116,7 +145,7 @@ else:
             target_owner.add_pet(
                 Pet(
                     name=pet_name.strip(),
-                    species=pet_species,
+                    species=pet_species.lower(),
                     age=int(pet_age),
                     sex=pet_sex,
                     breed=pet_breed.strip() or None,
@@ -175,76 +204,87 @@ else:
         )
         edit_owner, edit_pet = all_patients[edit_index]
 
+        # --- CASCADING SPECIES LOGIC (EDIT) ---
+        current_pet_species = edit_pet.species.lower() if edit_pet.species else "other"
+        default_group_index = 0
+        for idx, (group_name, species_list) in enumerate(PET_CATEGORIES.items()):
+            if current_pet_species in species_list:
+                default_group_index = idx
+                break
+
+        selected_edit_group = st.selectbox(
+            "Species Group*",
+            GROUP_OPTIONS,
+            index=default_group_index,
+            key=f"edit_species_group_{edit_index}"
+        )
+
+        edit_allowed_species = sorted(PET_CATEGORIES[selected_edit_group])
+        if "other" not in edit_allowed_species:
+            edit_allowed_species.append("other")
+
         with st.form("edit_patient_form"):
             st.markdown("**Basic Info**")
-            edit_basic_cols = st.columns(4)
+            edit_basic_cols = st.columns(3)
             with edit_basic_cols[0]:
-                edited_name = st.text_input("Name*", value=edit_pet.name, key="edit_pet_name")
+                edited_name = st.text_input("Name*", value=edit_pet.name, key=f"edit_pet_name_{edit_index}")
             with edit_basic_cols[1]:
+                try:
+                    species_sub_index = edit_allowed_species.index(current_pet_species)
+                except ValueError:
+                    species_sub_index = edit_allowed_species.index("other")
+
                 edited_species = st.selectbox(
                     "Species*",
-                    SPECIES_OPTIONS,
-                    index=SPECIES_OPTIONS.index(edit_pet.species)
-                    if edit_pet.species in SPECIES_OPTIONS
-                    else SPECIES_OPTIONS.index("other"),
-                    key="edit_pet_species",
+                    edit_allowed_species,
+                    index=species_sub_index,
+                    format_func=lambda s: s.capitalize(),
+                    key=f"edit_pet_species_{edit_index}",
                 )
             with edit_basic_cols[2]:
-                edited_breed = st.text_input("Breed", value=edit_pet.breed or "", key="edit_pet_breed")
-            with edit_basic_cols[3]:
+                edited_breed = st.text_input("Breed", value=edit_pet.breed or "", key=f"edit_pet_breed_{edit_index}")
+            
+            edit_basic_cols_2 = st.columns(2)
+            with edit_basic_cols_2[0]:
                 edited_age = st.number_input(
-                    "Age", min_value=0, max_value=40, value=edit_pet.age or 0, key="edit_pet_age"
+                    "Age", min_value=0, max_value=40, value=edit_pet.age or 0, key=f"edit_pet_age_{edit_index}"
                 )
-            edited_sex = st.selectbox(
-                "Sex*",
-                SEX_OPTIONS,
-                index=SEX_OPTIONS.index(edit_pet.sex) if edit_pet.sex in SEX_OPTIONS else 0,
-                key="edit_pet_sex",
-            )
+            with edit_basic_cols_2[1]:
+                edited_sex = st.selectbox(
+                    "Sex*",
+                    SEX_OPTIONS,
+                    index=SEX_OPTIONS.index(edit_pet.sex) if edit_pet.sex in SEX_OPTIONS else 0,
+                    key=f"edit_pet_sex_{edit_index}",
+                )
 
             st.markdown("**Physical Traits**")
             edit_physical_cols = st.columns(3)
             with edit_physical_cols[0]:
-                edited_weight = st.text_input(
-                    "Weight", value=edit_pet.weight or "", key="edit_pet_weight"
-                )
+                edited_weight = st.text_input("Weight", value=edit_pet.weight or "", key=f"edit_pet_weight_{edit_index}")
             with edit_physical_cols[1]:
-                edited_height = st.text_input(
-                    "Height", value=edit_pet.height or "", key="edit_pet_height"
-                )
+                edited_height = st.text_input("Height", value=edit_pet.height or "", key=f"edit_pet_height_{edit_index}")
             with edit_physical_cols[2]:
-                edited_color_markings = st.text_input(
-                    "Color/Markings", value=edit_pet.color_markings or "", key="edit_pet_color_markings"
-                )
+                edited_color_markings = st.text_input("Color/Markings", value=edit_pet.color_markings or "", key=f"edit_pet_color_markings_{edit_index}")
 
             st.markdown("**Health & Safety**")
             edit_health_cols = st.columns(2)
             with edit_health_cols[0]:
-                edited_microchip = st.text_input(
-                    "Microchip #", value=edit_pet.microchip_number or "", key="edit_pet_microchip"
-                )
+                edited_microchip = st.text_input("Microchip #", value=edit_pet.microchip_number or "", key=f"edit_pet_microchip_{edit_index}")
                 edited_spayed_neutered = st.selectbox(
                     "Spayed/Neutered",
                     SPAYED_NEUTERED_OPTIONS,
-                    index=SPAYED_NEUTERED_OPTIONS.index(edit_pet.spayed_neutered)
-                    if edit_pet.spayed_neutered in SPAYED_NEUTERED_OPTIONS
-                    else 0,
-                    key="edit_pet_spayed_neutered",
+                    index=SPAYED_NEUTERED_OPTIONS.index(edit_pet.spayed_neutered) if edit_pet.spayed_neutered in SPAYED_NEUTERED_OPTIONS else 0,
+                    key=f"edit_pet_spayed_neutered_{edit_index}",
                 )
             with edit_health_cols[1]:
-                edited_allergies = st.text_input(
-                    "Allergies", value=edit_pet.allergies or "", key="edit_pet_allergies"
-                )
-                edited_blood_type = st.text_input(
-                    "Blood group", value=edit_pet.blood_type or "", key="edit_pet_blood_type"
-                )
-            edited_behavioral_notes = st.text_area(
-                "Behavioral Notes", value=edit_pet.behavioral_notes or "", key="edit_pet_behavioral_notes"
-            )
+                edited_allergies = st.text_input("Allergies", value=edit_pet.allergies or "", key=f"edit_pet_allergies_{edit_index}")
+                edited_blood_type = st.text_input("Blood group", value=edit_pet.blood_type or "", key=f"edit_pet_blood_type_{edit_index}")
+            
+            edited_behavioral_notes = st.text_area("Behavioral Notes", value=edit_pet.behavioral_notes or "", key=f"edit_pet_behavioral_notes_{edit_index}")
             edited_medical_history = st.text_area(
                 "Medical history (one condition per line)",
                 value="\n".join(edit_pet.chronic_conditions),
-                key="edit_pet_medical_history",
+                key=f"edit_pet_medical_history_{edit_index}",
             )
 
             st.markdown("**Diet**")
@@ -253,27 +293,27 @@ else:
                 edited_diet_good = st.text_area(
                     "Diet should contain (one per line)",
                     value="\n".join(edit_pet.diet_good) if hasattr(edit_pet, 'diet_good') else "",
-                    key="edit_pet_diet_good",
+                    key=f"edit_pet_diet_good_{edit_index}",
                 )
             with edit_diet_cols[1]:
                 edited_diet_bad = st.text_area(
                     "Diet should not contain (one per line)",
                     value="\n".join(edit_pet.diet_bad) if hasattr(edit_pet, 'diet_bad') else "",
-                    key="edit_pet_diet_bad",
+                    key=f"edit_pet_diet_bad_{edit_index}",
                 )
 
             edited_status = st.selectbox(
                 "Status",
                 STATUS_OPTIONS,
                 index=STATUS_OPTIONS.index(edit_pet.status) if edit_pet.status in STATUS_OPTIONS else 0,
-                key="edit_pet_status",
+                key=f"edit_pet_status_{edit_index}",
             )
 
             submitted_edit = st.form_submit_button("Save changes")
 
         if submitted_edit and edited_name.strip():
             edit_pet.name = edited_name.strip()
-            edit_pet.species = edited_species
+            edit_pet.species = edited_species.lower()
             edit_pet.breed = edited_breed.strip() or None
             edit_pet.age = int(edited_age)
             edit_pet.sex = edited_sex
@@ -281,22 +321,15 @@ else:
             edit_pet.height = edited_height.strip() or None
             edit_pet.color_markings = edited_color_markings.strip() or None
             edit_pet.microchip_number = edited_microchip.strip() or None
-            edit_pet.spayed_neutered = (
-                edited_spayed_neutered if edited_spayed_neutered != "Unknown" else None
-            )
+            edit_pet.spayed_neutered = edited_spayed_neutered if edited_spayed_neutered != "Unknown" else None
             edit_pet.allergies = edited_allergies.strip() or None
             edit_pet.blood_type = edited_blood_type.strip() or None
             edit_pet.behavioral_notes = edited_behavioral_notes.strip() or None
-            edit_pet.chronic_conditions = [
-                line.strip() for line in edited_medical_history.splitlines() if line.strip()
-            ]
-            edit_pet.diet_good = [
-                line.strip() for line in edited_diet_good.splitlines() if line.strip()
-            ]
-            edit_pet.diet_bad = [
-                line.strip() for line in edited_diet_bad.splitlines() if line.strip()
-            ]
+            edit_pet.chronic_conditions = [line.strip() for line in edited_medical_history.splitlines() if line.strip()]
+            edit_pet.diet_good = [line.strip() for line in edited_diet_good.splitlines() if line.strip()]
+            edit_pet.diet_bad = [line.strip() for line in edited_diet_bad.splitlines() if line.strip()]
             edit_pet.status = edited_status
+            
             save_owners(owners)
             st.session_state.show_edit_patient = False
             st.success(f"Updated {edit_pet.name}.")
@@ -321,14 +354,6 @@ else:
 # ==========================================
 st.divider()
 st.subheader("Patients Directory")
-
-PET_CATEGORIES = {
-    "🐶 General Companion": ["dog", "cat"],
-    "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
-    "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
-    "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
-    "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
-}
 
 selected_group = st.radio(
     "Filter by Species Group",
@@ -381,7 +406,6 @@ def render_patient_cards(patient_list):
             else:
                 st.write("**Medical history:** —")
 
-# Apply both broad-tier dynamic filtering and text search filters queries
 allowed_species = PET_CATEGORIES[selected_group]
 query_lower = search_query.strip().lower()
 
@@ -435,7 +459,7 @@ else:
     elif "Reptiles & Amphibians" in selected_group:
         tab_titles = ["🦎 Lizards & Snakes", "🐢 Chelonians", "🐸 Amphibians"]
         tabs = st.tabs(tab_titles)
-        snakes_lizards = ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "ignuana", "iguana", "skink", "corn snake", "ball python", "king snake"]
+        snakes_lizards = ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "corn snake", "ball python", "king snake"]
         chelonians = ["turtle", "tortoise"]
         with tabs[0]:
             render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() in snakes_lizards])
