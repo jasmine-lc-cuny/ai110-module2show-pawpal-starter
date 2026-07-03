@@ -279,16 +279,15 @@ def delete_uploaded_document(document: Document) -> None:
 # ==========================================
 
 def pet_label(pet: Pet, owners: list[Owner]) -> str:
-    """Return '🐈 Garfield (Jasmine)' formatting for dropdown lists."""
-    for owner in owners:
-        if any(existing is pet for existing in owner.pets):
-            return f"{pet_species_icon(pet.species)} {pet.name} ({owner.name})"
-    return f"{pet_species_icon(pet.species)} {pet.name}"
+    """Return '🐈 Garfield (cat)' formatting for dropdown lists without cluttering owner name."""
+    return f"{pet_species_icon(pet.species)} {pet.name} ({pet.species})"
 
 def task_pair_label(index: int, pet: Pet, task: Task, owners: list[Owner]) -> str:
     """Return a unique dropdown label for a specific task to prevent duplication errors."""
+    # We include owner name here just to be safe when completing tasks
+    owner_name = next((o.name for o in owners if pet in o.pets), "Unknown")
     return (
-        f"{index + 1}. {pet_label(pet, owners)} | {task_type_icon(task.title)} {task.title} "
+        f"{index + 1}. {pet_species_icon(pet.species)} {pet.name} ({owner_name}) | {task_type_icon(task.title)} {task.title} "
         f"@ {format_time_12h(task.time)}"
     )
 
@@ -378,12 +377,13 @@ def render_category_page(
     category_tasks = scheduler.sort_by_time(tasks_in_category(owner, category))
     title_options = CATEGORY_TASK_TITLES.get(category, [])
 
+    # ✅ CORRECTED IF / ELIF / ELSE STRUCTURE
     if not owner.pets:
         st.warning("Add a pet before scheduling tasks here.")
         st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
     elif not title_options:
         st.info(f"{display_name} isn't wired up to specific task types yet.")
-else:
+    else:
         st.subheader(f"Schedule a {display_name} Task")
 
         if category == "veterinary":
@@ -404,13 +404,10 @@ else:
                 key=f"{category}_group_filter"
             )
 
-            # Determine which specific species to show based on the chosen group
             if selected_group == "All Groups":
                 allowed_species = None
             else:
                 raw_species_list = PET_CATEGORIES[selected_group]
-                
-                # Format the options cleanly with their icons (e.g., "🐕 Dog")
                 species_options = ["All"] + [f"{pet_species_icon(s)} {s.capitalize()}" for s in raw_species_list]
                 
                 selected_species_label = st.radio(
@@ -423,7 +420,6 @@ else:
                 if selected_species_label == "All":
                     allowed_species = raw_species_list
                 else:
-                    # Extract the pure string back out (e.g., pulling "dog" from "🐕 Dog")
                     target = selected_species_label.split(" ", 1)[-1].lower()
                     allowed_species = [target]
         else:
@@ -441,7 +437,6 @@ else:
             if target_species:
                 allowed_species = [target_species]
             else:
-                # If "All" is clicked on a non-vet page, STRICTLY limit to dogs and cats
                 allowed_species = ["dog", "cat"]
 
         # 1. Filter owners down to ONLY those who have pets matching the active filters
@@ -497,12 +492,15 @@ else:
                     st.session_state[f"{category}_owner_index_state"] = selected_owner_index
                     st.rerun()
 
+            # Create a safe string to represent our current filter state so the widget key is truly unique
+            filter_state_key = "_".join(allowed_species) if allowed_species else "all"
+
             with col2:
                 selected_filtered_index = st.selectbox(
                     "Pet",
                     range(len(filtered_pets)),
                     format_func=lambda i: pet_labels[i],
-                    key=f"{category}_pet_select_{st.session_state[f'{category}_owner_index_state']}_{selected_group}",
+                    key=f"{category}_pet_select_{st.session_state[f'{category}_owner_index_state']}_{filter_state_key}",
                 )
                 selected_pet_index = filtered_pets[selected_filtered_index][0]
 
