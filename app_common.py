@@ -20,7 +20,8 @@ from pawpal_system import (
     Task,
     format_time_12h,
     load_owners_from_json,
-    pet_species_icon,import streamlit as st
+    pet_species_icon,
+)
 from datetime import date, datetime
 from pathlib import Path
 from pawpal_system import load_owners_from_json, save_owners_to_json, Task
