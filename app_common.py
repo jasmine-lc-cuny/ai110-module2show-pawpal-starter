@@ -177,6 +177,66 @@ INJECTION_MEDICATION_OPTIONS = {
     ],
 }
 
+# The Dog Cafes fixed menu: (section, tagline, [(item, price, description)]).
+# Drives both the menu display tabs on the Dog Cafes page and the RSVP
+# form's two-step Menu -> Item picker (picked item lands in Task.notes).
+A_LA_BARK_MENU = [
+    (
+        "🍔 Pooch Pub Grub",
+        "Hearty, warm, and savory meals for the hungriest pups.",
+        [
+            ("Mini Paw Burger & Sliders", "$6.50", "Small beef patties served with a side of steamed veggies."),
+            ("The Bark-B-Q Platter", "$8.50", "Slow-cooked, shredded chicken or beef with a drizzle of dog-safe bone broth."),
+            ("Shepherd’s Pie for Paws", "$7.25", "Lean ground meat topped with a layer of mashed sweet potato and peas."),
+            ("Barkingly Good Beef Supper", "$5.00", "A warm meal of ground beef, brown rice, and vegetables."),
+            ("Waggingly Delicious Chicken Dinner", "$5.00", "Slow-cooked chicken in doggy gravy with crushed potatoes and vegetables."),
+            ("Doggy Bowl", "$7.00", "A full meal featuring turkey, brown rice, corn, peas, green beans, and carrots."),
+        ],
+    ),
+    (
+        "🧁 Poodings & Paws-tisserie",
+        "Sweet, decadent treats and baked goods to finish off the perfect outing.",
+        [
+            ("Pup-Cake Delight", "$3.75", "A single-serve cupcake topped with sugar-free yogurt icing and a biscuit crumble."),
+            ("Pupcake", "$3.20", "A classic baked treat."),
+            ("Doggy Doughnut", "$3.20", "A sweet ring-shaped baked good."),
+            ("Doggy Éclair", "$3.84", "A specialty pastry-style treat."),
+            ("Iced Bone", "$3.20", "A crunchy, frosted biscuit bone."),
+        ],
+    ),
+    (
+        "🍦 Frosty Furs & Chillers",
+        "Refreshing, icy, and creamy delights for hot days.",
+        [
+            ("Bark-A-Licious Gelato", "$4.50", "A generous scoop of peanut butter or banana-flavored doggy ice cream."),
+            ("Frosty Paws Ice Cream Cup", "$4.99", "A cool, wholesome treat containing essential vitamins, minerals, and protein."),
+            ("Whipped Cream \"Pup-Tini\"", "$2.50", "A small, fluffy cup of fresh whipped cream served with a crunchy bone-shaped cookie."),
+            ("Doggie Frap", "$1.89", "A small bowl of homemade whipped cream."),
+            ("Puppuccino", "$2.56", "A bowl of freshly chilled goat’s milk."),
+        ],
+    ),
+    (
+        "🦴 Snack-Attack Nibbles",
+        "Small, quick bites perfect for training or snacking.",
+        [
+            ("Lil' Nibbles", "$0.63–$3.19", "Smaller snacks including chicken breast, sausages, biscuits, or a Yorkie puddin'."),
+            ("Veggie Snacks", "$3.00", "A healthy mix of apples, carrots, and cucumbers."),
+            ("Scooby Snacks", "$4.00", "A treat made with pumpkin, peanut butter, milk, and oats."),
+            ("Bon A-Pet Treat", "$2.00", "Homemade peanut butter bone-shaped biscuits."),
+        ],
+    ),
+    (
+        "🍺 The Wet Bar (For Canines)",
+        "Non-alcoholic, dog-safe beverages.",
+        [
+            ("Dog Beer", "$3.84", "A refreshing, non-alcoholic brew."),
+            ("Bottom Sniffer Beer", "$4.93", "A specialized doggy beer."),
+            ("Pawsacco", "$3.84", "A specialized herbal blend."),
+            ("Doggy Afternoon Tea", "$8.96", "Specialized blends for oral health or skin and coat support."),
+        ],
+    ),
+]
+
 # Common clinic services offered in the "Service" dropdown on the Services
 # page, each with a typical default cost that pre-fills (but doesn't lock)
 # the Cost field — same "pick a common one, or Other (custom)" pattern as
@@ -193,10 +253,11 @@ COMMON_SERVICES = [
 
 # Which task_type_icon() emoji belong to each "Book a Service" category.
 # Feeding (🍖) and anything task_type_icon() can't categorize (🐾) don't have
-# an obvious home among the 6 categories, so they land under Special
-# Services. Sitting and Training have no matching task types yet — their
-# pages are placeholders until tasks like "Boarding" or "Training Session"
-# get added to COMMON_TASK_TITLES and TASK_TYPE_ICONS.
+# an obvious home among the other categories, so they land under the
+# "special_services" key (presented as "Dog Cafes"). Sitting and Training
+# have no matching task types yet — their pages are placeholders until tasks
+# like "Boarding" or "Training Session" get added to COMMON_TASK_TITLES and
+# TASK_TYPE_ICONS.
 SERVICE_CATEGORY_ICONS = {
     "grooming": {"👂", "🦷", "💅", "✂️", "🧼", "🪮"},
     "walking": {"🐕"},
@@ -423,17 +484,47 @@ def render_veterinary_reason_picker(title: str, species: str, key_prefix: str = 
     return None
 
 
-def render_category_page(category: str, display_name: str, icon: str) -> None:
+def _render_dog_cafe_menu_picker() -> str:
+    """Show the Dog Cafes two-step Menu section -> Item picker and return the
+    picked item as "Name (price)" for Task.notes. Lives outside the st.form
+    for the same reason as the veterinary Reason picker: the item list must
+    react immediately to the chosen menu section."""
+    section_index = st.selectbox(
+        "Menu",
+        range(len(A_LA_BARK_MENU)),
+        format_func=lambda i: A_LA_BARK_MENU[i][0],
+        key="dog_cafe_menu_section",
+    )
+    section_name, tagline, items = A_LA_BARK_MENU[section_index]
+    item_labels = [f"{name} ({price})" for name, price, _ in items]
+    item_index = st.selectbox(
+        "Menu Item",
+        range(len(items)),
+        format_func=lambda i: item_labels[i],
+        # Keyed per section: the options list changes with the section, and
+        # reusing one key across different option lists leaves stale state.
+        key=f"dog_cafe_menu_item_{section_index}",
+    )
+    st.caption(items[item_index][2])
+    return item_labels[item_index]
+
+
+def render_category_page(
+    category: str, display_name: str, icon: str, page_title: str | None = None
+) -> None:
     """Render a full "Book a Service" category page: quick-add form, filtered
     schedule, and a complete-task action, all scoped to this category.
 
+    display_name is woven into phrases ("Schedule a {display_name} Task"),
+    so pass page_title when the heading differs from the task kind — e.g.
+    heading "🍖 Dog Cafes" with phrasing "Schedule a Dog Cafe Task".
     Completing/deleting/reopening any task still lives on "Today's Schedule"
     rather than being duplicated on every category page.
     """
     owner = get_combined_owner()
     scheduler = get_scheduler()
 
-    st.title(f"{icon} {display_name}")
+    st.title(page_title if page_title else f"{icon} {display_name}")
 
     category_tasks = scheduler.sort_by_time(tasks_in_category(owner, category))
     title_options = CATEGORY_TASK_TITLES.get(category, [])
@@ -455,11 +546,19 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
         # across reruns, and add_task() mutates a list on that object, so a
         # copy would silently lose the new task.
         # Labels precomputed into a plain list so the format_func closes over
-        # no session state (see pet_label's docstring).
+        # no session state (see pet_label's docstring). Walking shows the
+        # pet's species instead of its owner per request; the "N." prefix
+        # keeps every label unique either way (same-named pets exist).
         real_owners = get_owners()
-        pet_labels = [
-            f"{i + 1}. {pet_label(pet, real_owners)}" for i, pet in enumerate(owner.pets)
-        ]
+        if category == "walking":
+            pet_labels = [
+                f"{i + 1}. {pet_species_icon(pet.species)} {pet.name} ({pet.species})"
+                for i, pet in enumerate(owner.pets)
+            ]
+        else:
+            pet_labels = [
+                f"{i + 1}. {pet_label(pet, real_owners)}" for i, pet in enumerate(owner.pets)
+            ]
         selected_pet_index = st.selectbox(
             "Pet",
             range(len(owner.pets)),
@@ -472,6 +571,8 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
         if category == "veterinary":
             selected_species = owner.pets[selected_pet_index].species
             reason = render_veterinary_reason_picker(title, selected_species, key_prefix=category)
+        elif category == "special_services":
+            reason = _render_dog_cafe_menu_picker()
 
         with st.form(f"add_{category}_task_form", clear_on_submit=True):
             st.write("Time")
@@ -487,12 +588,18 @@ def render_category_page(category: str, display_name: str, icon: str) -> None:
             with period_col:
                 period = st.selectbox("AM/PM", ["AM", "PM"], label_visibility="collapsed")
 
-            duration = st.number_input(
-                "Duration (minutes)", min_value=1, max_value=240, value=20
-            )
-            priority = st.selectbox("Priority", ["high", "medium", "low"])
-            frequency = st.selectbox("Frequency", ["once", "daily", "weekly"])
-            submitted = st.form_submit_button(f"Add {display_name} task")
+            if category == "special_services":
+                # An RSVP doesn't need scheduling knobs — a cafe visit gets a
+                # fixed one-hour slot at normal priority, booked once.
+                duration, priority, frequency = 60, "medium", "once"
+                submitted = st.form_submit_button("Dog Cafe RSVP")
+            else:
+                duration = st.number_input(
+                    "Duration (minutes)", min_value=1, max_value=240, value=20
+                )
+                priority = st.selectbox("Priority", ["high", "medium", "low"])
+                frequency = st.selectbox("Frequency", ["once", "daily", "weekly"])
+                submitted = st.form_submit_button(f"Add {display_name} task")
 
         if submitted:
             hour_24 = hour_12 % 12

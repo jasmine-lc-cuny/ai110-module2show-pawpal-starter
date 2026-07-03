@@ -8,7 +8,6 @@ from app_common import (
     CATEGORY_TASK_TITLES,
     get_clinic,
     get_owners,
-    render_category_page,
     render_veterinary_reason_picker,
     save_clinic,
 )
@@ -64,10 +63,14 @@ def book_appointment_dialog(owners, clinic) -> None:
             visit_title, selected_species, key_prefix="book_appt_vet"
         )
 
+    doctor_labels = [
+        f"{doctor.full_name} — {doctor.specialization}" if doctor.specialization else doctor.full_name
+        for doctor in active_doctors
+    ]
     doctor_index = st.selectbox(
         "Doctor*",
         range(len(active_doctors)),
-        format_func=lambda i: active_doctors[i].full_name,
+        format_func=lambda i: doctor_labels[i],
         key="book_appt_doctor_select",
     )
     appointment_date = st.date_input("Date*", key="book_appt_date")
@@ -141,19 +144,10 @@ def update_status_dialog(clinic, appointment, owners) -> None:
         st.rerun()
 
 
-# The pet-owner-facing "Schedule a Veterinary Task" quick-add form used to
-# live on its own "Book a Service" page; it's rendered here instead since
-# quick vet-care scheduling and clinic-side appointment booking now live on
-# the same page. render_category_page() also renders its own owner switcher
-# in the sidebar, on top of the clinic-wide content below.
-render_category_page("veterinary", "Veterinary", "🏥")
-
-st.divider()
-
 owners = get_owners()
 clinic = get_clinic()
 
-st.subheader("📋 Appointments")
+st.title("📋 Appointments")
 st.caption("Book new appointments and manage their status.")
 
 status_filter = st.sidebar.selectbox("Filter by status", ["All"] + APPOINTMENT_STATUSES)

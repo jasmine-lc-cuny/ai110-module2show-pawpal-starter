@@ -9,58 +9,75 @@ st.title("👩‍⚕️ Doctors")
 st.caption("Manage the clinic's medical staff.")
 
 st.subheader("Add New Doctor")
-with st.form("add_doctor_form", clear_on_submit=True):
-    st.markdown("**Login Details**")
-    login_cols = st.columns(2)
-    with login_cols[0]:
-        first_name = st.text_input("First name")
-        username = st.text_input("Username*")
-        email = st.text_input("Email address")
-    with login_cols[1]:
-        last_name = st.text_input("Last name")
-        password = st.text_input(
-            "Password*",
-            type="password",
-            help="Stored as a plain record field for reference only — PawPal+ has no login system.",
-        )
-        phone = st.text_input("Phone")
+# Same collapse pattern as the Patients page forms: a session flag +
+# button rather than st.expander, so a successful save can reliably
+# close it (expander toggle state lives client-side with no key).
+if "show_add_doctor" not in st.session_state:
+    st.session_state.show_add_doctor = False
 
-    st.markdown("**Professional Details**")
-    prof_cols = st.columns(2)
-    with prof_cols[0]:
-        department_name = st.text_input("Department*")
-        specialization = st.text_input("Specialization*")
-    with prof_cols[1]:
-        education = st.text_input("Education")
-        visit_fee = st.number_input("Visit Fee ($)", min_value=0.0, step=1.0, value=0.0)
-    active = st.checkbox("Active", value=True)
-
-    submitted_doctor = st.form_submit_button("Save Doctor")
-
-if submitted_doctor:
-    if not username.strip() or not password or not specialization.strip():
-        st.error("Username, password, and specialization are required.")
-    elif clinic.find_doctor(username.strip()):
-        st.error(f"Username '{username.strip()}' is already in use.")
-    else:
-        clinic.doctors.append(
-            Doctor(
-                first_name=first_name.strip(),
-                last_name=last_name.strip(),
-                username=username.strip(),
-                password=password,
-                email=email.strip() or None,
-                phone=phone.strip() or None,
-                department_name=department_name.strip(),
-                specialization=specialization.strip(),
-                education=education.strip(),
-                visit_fee=float(visit_fee),
-                active=active,
-            )
-        )
-        save_clinic(clinic)
-        st.success(f"Added Dr. {first_name.strip()} {last_name.strip()}.")
+if not st.session_state.show_add_doctor:
+    if st.button("➕ Add a new doctor", key="add_doctor_show"):
+        st.session_state.show_add_doctor = True
         st.rerun()
+else:
+    if st.button("🔼 View less", key="add_doctor_hide"):
+        st.session_state.show_add_doctor = False
+        st.rerun()
+
+    with st.form("add_doctor_form", clear_on_submit=True):
+        st.markdown("**Login Details**")
+        login_cols = st.columns(2)
+        with login_cols[0]:
+            first_name = st.text_input("First name")
+            username = st.text_input("Username*")
+            email = st.text_input("Email address")
+        with login_cols[1]:
+            last_name = st.text_input("Last name")
+            password = st.text_input(
+                "Password*",
+                type="password",
+                help="Stored as a plain record field for reference only — PawPal+ has no login system.",
+            )
+            phone = st.text_input("Phone")
+
+        st.markdown("**Professional Details**")
+        prof_cols = st.columns(2)
+        with prof_cols[0]:
+            department_name = st.text_input("Department*")
+            specialization = st.text_input("Specialization*")
+        with prof_cols[1]:
+            education = st.text_input("Education")
+            visit_fee = st.number_input("Visit Fee ($)", min_value=0.0, step=1.0, value=0.0)
+        active = st.checkbox("Active", value=True)
+
+        submitted_doctor = st.form_submit_button("Save Doctor")
+
+    if submitted_doctor:
+        if not username.strip() or not password or not specialization.strip():
+            st.error("Username, password, and specialization are required.")
+        elif clinic.find_doctor(username.strip()):
+            st.error(f"Username '{username.strip()}' is already in use.")
+        else:
+            clinic.doctors.append(
+                Doctor(
+                    first_name=first_name.strip(),
+                    last_name=last_name.strip(),
+                    username=username.strip(),
+                    password=password,
+                    email=email.strip() or None,
+                    phone=phone.strip() or None,
+                    department_name=department_name.strip(),
+                    specialization=specialization.strip(),
+                    education=education.strip(),
+                    visit_fee=float(visit_fee),
+                    active=active,
+                )
+            )
+            save_clinic(clinic)
+            # Collapse the add-doctor section after a successful save.
+            st.session_state.show_add_doctor = False
+            st.success(f"Added Dr. {first_name.strip()} {last_name.strip()}.")
+            st.rerun()
 
 st.divider()
 st.subheader("Medical Staff")

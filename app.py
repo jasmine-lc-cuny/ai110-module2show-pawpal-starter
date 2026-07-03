@@ -17,7 +17,7 @@ SERVICES = [
     ("🏠", "Sitting", "pages/sitting.py"),
     ("🎓", "Training", "pages/training.py"),
     ("🐕", "Walking", "pages/walking.py"),
-    ("✨", "Special Services", "pages/special_services.py"),
+    ("🍖", "Dog Cafes", "pages/special_services.py"),
 ]
 
 
@@ -29,7 +29,7 @@ def home_page():
     st.title("🐾 PawPal+")
     st.caption("Welcome back! What would you like to do today?")
 
-    st.subheader("Book a Service")
+    st.subheader("🛎️ Book a Service")
     cols = st.columns(3)
     for i, (icon, label, path) in enumerate(SERVICES):
         with cols[i % 3]:
@@ -70,16 +70,17 @@ pg = st.navigation(
             st.Page("pages/todays_schedule.py", title="Today's Schedule", icon="📅"),
             st.Page("pages/calendar.py", title="Calendar", icon="🗓️"),
         ],
-        "Book a Service": [
+        "🛎️ Book a Service": [
             st.Page("pages/grooming.py", title="Grooming", icon="🛁"),
             st.Page("pages/sitting.py", title="Sitting", icon="🏠"),
             st.Page("pages/training.py", title="Training", icon="🎓"),
             st.Page("pages/walking.py", title="Walking", icon="🐕"),
-            st.Page("pages/special_services.py", title="Special Services", icon="✨"),
+            st.Page("pages/special_services.py", title="Dog Cafes", icon="🍖"),
         ],
         "🩺 Veterinarian": [
             st.Page("pages/clinic_dashboard.py", title="Clinic Dashboard", icon="🏥"),
             st.Page("pages/appointments.py", title="Appointments", icon="📋"),
+            st.Page("pages/task.py", title="Task", icon="📝"),
             st.Page("pages/doctors.py", title="Doctors", icon="👩‍⚕️"),
             st.Page("pages/services.py", title="Services", icon="💲"),
             st.Page("pages/patients.py", title="Patients", icon="🧾"),
