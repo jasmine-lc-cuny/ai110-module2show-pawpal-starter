@@ -20,7 +20,106 @@ from pawpal_system import (
     Task,
     format_time_12h,
     load_owners_from_json,
-    pet_species_icon,
+    pet_species_icon,import streamlit as st
+from datetime import date, datetime
+from pathlib import Path
+from pawpal_system import load_owners_from_json, save_owners_to_json, Task
+
+DATA_PATH = "data.json"
+
+st.set_page_config(page_title="Services Dashboard", page_icon="🛎️", layout="wide")
+
+st.title("🛎️ Services & Booking Dashboard")
+st.markdown("Welcome to the PawPal+ Services Hub! Book and manage specialized care for your patients.")
+
+# Load Database
+owners = []
+if Path(DATA_PATH).exists():
+    owners = load_owners_from_json(DATA_PATH)
+
+# 1. Quick Metrics
+st.subheader("At a Glance")
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric(label="Grooming Slots", value="12 Available")
+with col2:
+    st.metric(label="Walking Routes", value="5 Active")
+with col3:
+    st.metric(label="Sitting Capacity", value="85% Full")
+with col4:
+    st.metric(label="Training Classes", value="3 Today")
+
+st.divider()
+
+# 2. Booking Form
+st.subheader("🗓️ Book a New Service")
+
+# Build options
+pet_options = []
+pet_map = {}
+for owner in owners:
+    for pet in owner.pets:
+        label = f"{pet.name} ({pet.species.capitalize()}) - Owner: {owner.name}"
+        pet_options.append(label)
+        pet_map[label] = (owner, pet)
+
+if not pet_options:
+    st.warning("No patients found in the database. Please add a patient first.")
+else:
+    with st.form("book_service_form"):
+        selected_pet_label = st.selectbox("Select Patient", options=pet_options)
+        
+        service_type = st.selectbox("Service Category", [
+            "Grooming (Wash/Cut)", 
+            "Dog Walking", 
+            "Pet Sitting", 
+            "Training Session", 
+            "Veterinary Exam",
+            "Exotic Habitat Setup"
+        ])
+        
+        col_date, col_time = st.columns(2)
+        with col_date:
+            service_date = st.date_input("Date", value=date.today())
+        with col_time:
+            service_time = st.time_input("Time", value=datetime.strptime("10:00", "%H:%M").time())
+            
+        priority = st.selectbox("Priority", ["low", "medium", "high"])
+        notes = st.text_area("Additional Notes (e.g., special shampoo, behavioral quirks, tank temp)")
+        
+        submitted = st.form_submit_button("Book Service", type="primary")
+        
+        if submitted:
+            owner, pet = pet_map[selected_pet_label]
+            
+            # Create a new Task
+            new_task = Task(
+                title=service_type,
+                time=service_time.strftime("%H:%M"),
+                duration_minutes=60,
+                priority=priority,
+                frequency="once",
+                notes=notes
+            )
+            # Hack the due date to match the form
+            new_task.due_date = service_date
+            
+            pet.add_task(new_task)
+            save_owners_to_json(owners, DATA_PATH)
+            
+            st.success(f"🎉 Successfully booked **{service_type}** for {pet.name} on {service_date.strftime('%b %d')} at {service_time.strftime('%I:%M %p')}!")
+
+st.divider()
+
+# 3. Service Categories Info
+st.subheader("Explore Service Departments")
+cat1, cat2, cat3 = st.columns(3)
+with cat1:
+    st.info("✂️ **Grooming**\n\nFull-service washes, haircuts, nail trimming, and ear cleaning for all species.")
+with cat2:
+    st.success("🦮 **Walking & Exercise**\n\nDaily walking routes and designated playtime for energetic pets.")
+with cat3:
+    st.warning("🧠 **Training**\n\nObedience and behavioral classes, featuring specialized exotic handling.")
     priority_icon,
     save_owners_to_json,
     task_type_icon,
