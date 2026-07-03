@@ -552,7 +552,7 @@ def build_distribution(total):
     return distribution
 
 
-def seed_master_list():
+def seed_animals_list():
     """Rebuild data.json from scratch with the full combined clinic roster."""
     distribution = build_distribution(len(OWNER_NAMES))
 
@@ -572,5 +572,8 @@ def seed_master_list():
           f"{len(owners) - dogs - cats} exotics ({unique_species} unique species, all represented).")
 
 
+seed_master_list = seed_animals_list
+
+
 if __name__ == "__main__":
-    seed_master_list()
+    seed_animals_list()
