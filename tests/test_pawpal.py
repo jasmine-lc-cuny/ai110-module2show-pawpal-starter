@@ -9,6 +9,7 @@ from pawpal_system import (
     Pet,
     Scheduler,
     Service,
+    Staff,
     Task,
     find_owner,
     format_time_12h,
@@ -623,3 +624,80 @@ def test_clinic_income_skips_appointment_whose_doctor_was_deleted():
     )
 
     assert clinic.income() == 0.0
+
+
+def test_task_round_trips_assignee_and_category():
+    task = Task("Wash / Bath", "09:00", 30, assignee="Maya Reyes", category="grooming")
+
+    loaded = Task.from_dict(task.to_dict())
+
+    assert loaded.assignee == "Maya Reyes"
+    assert loaded.category == "grooming"
+
+
+def test_task_from_dict_defaults_assignee_and_category_for_old_data():
+    old_style_data = {
+        "title": "Morning Walk",
+        "time": "08:00",
+        "duration_minutes": 20,
+        "priority": "medium",
+        "frequency": "once",
+        "due_date": date.today().isoformat(),
+        "completed": False,
+    }
+
+    task = Task.from_dict(old_style_data)
+
+    assert task.assignee is None
+    assert task.category is None
+
+
+def test_recurring_task_carries_over_assignee_and_category():
+    task = Task(
+        "Overnight Sitting", "20:00", 60, frequency="daily",
+        assignee="Diego Okafor", category="sitting",
+    )
+
+    next_task = task.next_occurrence(completed_on=date.today())
+
+    assert next_task.assignee == "Diego Okafor"
+    assert next_task.category == "sitting"
+
+
+def test_staff_to_dict_and_from_dict_round_trip():
+    member = Staff(
+        first_name="Maya",
+        last_name="Reyes",
+        username="mreyes",
+        section="Grooming",
+        role="Senior Groomer",
+        phone="(555) 123-4567",
+        email="mreyes@pawpalplus.com",
+        rate=55.0,
+        active=True,
+    )
+
+    loaded = Staff.from_dict(member.to_dict())
+
+    assert loaded == member
+    assert loaded.full_name == "Maya Reyes"
+
+
+def test_clinic_staff_in_section_filters_by_section():
+    groomer = Staff("Maya", "Reyes", "mreyes", section="Grooming")
+    walker = Staff("Diego", "Okafor", "dokafor", section="Walking")
+    clinic = Clinic(staff=[groomer, walker])
+
+    assert clinic.staff_in_section("Grooming") == [groomer]
+    assert clinic.staff_in_section("Walking") == [walker]
+    assert clinic.staff_in_section("Sitting") == []
+
+
+def test_clinic_round_trips_staff(tmp_path):
+    clinic = Clinic(staff=[Staff("Maya", "Reyes", "mreyes", section="Grooming", rate=55.0)])
+
+    json_path = tmp_path / "clinic.json"
+    clinic.save_to_json(str(json_path))
+    loaded = Clinic.load_from_json(str(json_path))
+
+    assert loaded.staff == clinic.staff

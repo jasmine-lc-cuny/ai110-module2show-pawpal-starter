@@ -2,7 +2,7 @@ import re
 
 import streamlit as st
 
-from pawpal_system import APPOINTMENT_STATUSES, Appointment, find_owner, format_time_12h
+from pawpal_system import APPOINTMENT_STATUSES, Appointment, Task, find_owner, format_time_12h
 from app_common import (
     APPOINTMENT_STATUS_COLORS,
     CATEGORY_TASK_TITLES,
@@ -10,9 +10,26 @@ from app_common import (
     get_owners,
     render_veterinary_reason_picker,
     save_clinic,
+    save_owners,
 )
 
 VISIT_REASON_TITLES = CATEGORY_TASK_TITLES["veterinary"] + ["Other (custom)"]
+
+
+def _linked_task(owners, appointment):
+    """Find the Task mirroring an appointment (matched by pet, date, and time)."""
+    owner = find_owner(owners, appointment.owner_name)
+    pet = owner.find_pet(appointment.pet_name) if owner else None
+    if pet is None:
+        return None, None
+    for task in pet.tasks:
+        if (
+            task.category == "veterinary"
+            and task.due_date == appointment.date
+            and task.time == appointment.time
+        ):
+            return pet, task
+    return pet, None
 
 
 def _dialog_key(*parts) -> str:
@@ -94,6 +111,7 @@ def book_appointment_dialog(owners, clinic) -> None:
             hour_24 += 12
         owner, pet = patient_pairs[patient_index]
         doctor = active_doctors[doctor_index]
+        appt_time = f"{hour_24:02d}:{minute}"
         if visit_title == "Other (custom)":
             final_reason = (custom_reason or "").strip()
         elif visit_reason:
@@ -106,11 +124,27 @@ def book_appointment_dialog(owners, clinic) -> None:
                 pet_name=pet.name,
                 doctor_username=doctor.username,
                 date=appointment_date,
-                time=f"{hour_24:02d}:{minute}",
+                time=appt_time,
                 reason=final_reason,
             )
         )
+        # Mirror the appointment as a Task on the pet so it also shows up on the
+        # Calendar, Today's Schedule, and Task page, and feeds conflict detection.
+        pet.add_task(
+            Task(
+                title=visit_title if visit_title != "Other (custom)" else "Vet Appointment",
+                time=appt_time,
+                duration_minutes=30,
+                priority="high",
+                frequency="once",
+                notes=final_reason,
+                due_date=appointment_date,
+                category="veterinary",
+                assignee=doctor.full_name,
+            )
+        )
         save_clinic(clinic)
+        save_owners(owners)
         # Toast text matches the mockup for visual fidelity only — no email is ever sent.
         st.toast("Appointment booked & Confirmation Email sent!", icon="✅")
         st.rerun()
@@ -139,7 +173,17 @@ def update_status_dialog(clinic, appointment, owners) -> None:
     )
     if st.button("Save", key=f"status_save_{key_suffix}"):
         appointment.status = new_status
+        # Keep the mirrored Task in sync with the appointment's status.
+        linked_pet, linked_task = _linked_task(owners, appointment)
+        if linked_task is not None:
+            if new_status == "Completed":
+                linked_task.mark_complete()
+            elif new_status == "Cancelled":
+                linked_pet.remove_task(linked_task)
+            else:  # Pending / Confirmed -> keep it as an open task
+                linked_task.mark_incomplete()
         save_clinic(clinic)
+        save_owners(owners)
         st.toast(f"Appointment status updated to {new_status}", icon="✅")
         st.rerun()
 

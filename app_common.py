@@ -198,6 +198,8 @@ COMMON_SERVICES = [
 SERVICE_CATEGORY_ICONS = {
     "grooming": {"👂", "🦷", "💅", "✂️", "🧼", "🪮"},
     "walking": {"🐕"},
+    "sitting": {"🏠"},
+    "training": {"🎓"},
     "veterinary": {"💊", "🏥"},
     "special_services": {"🍖", "🐾"},
 }
@@ -205,12 +207,24 @@ SERVICE_CATEGORY_ICONS = {
 CATEGORY_TASK_TITLES = {
     "grooming": ["Brush Coat", "Wash / Bath", "Hair Cut", "Trim Nails", "Ear Cleaning", "Teeth Brushing"],
     "walking": ["Morning Walk", "Afternoon Walk", "Evening Walk", "Playtime"],
+    "sitting": ["Day Sitting", "Overnight Sitting", "Drop-In Visit", "House Sitting"],
+    "training": ["Obedience Training", "Puppy Class", "Leash Training", "Trick Training"],
     "veterinary": [
         "Give Medication", "Heartworm Prevention", "Vet Appointment", "X-Ray",
         "Injection Medication", "Injection Vaccine", "Injection Subcutaneous",
         "Injection Intramuscular", "Injection Intravenous", "Blood Work", "Surgery",
     ],
     "special_services": ["Breakfast", "Lunch", "Dinner"],
+}
+
+# Maps a service-page category key to its staff section label (SERVICE_SECTIONS),
+# so a booking form can offer the staff assigned to that service.
+CATEGORY_TO_SECTION = {
+    "grooming": "Grooming",
+    "sitting": "Sitting",
+    "training": "Training",
+    "walking": "Walking",
+    "special_services": "Dog Cafes",
 }
 
 # ==========================================
@@ -294,6 +308,7 @@ def task_rows(task_pairs):
             "Species": pet.species,
             "Task": task.title,
             "Reason": task.notes or "—",
+            "Assigned To": task.assignee or "—",
             "Duration": task.duration_minutes,
             "Priority": f"{priority_icon(task.priority)} {task.priority}",
             "Frequency": task.frequency,
@@ -304,11 +319,15 @@ def task_rows(task_pairs):
     ]
 
 def tasks_in_category(owner: Owner, category: str):
+    # An explicit task.category (set when booked) wins; tasks created before
+    # that field existed (category is None) fall back to matching the title's
+    # icon against the category's icon set.
     icons = SERVICE_CATEGORY_ICONS.get(category, set())
     return [
         (pet, task)
         for pet, task in owner.all_tasks()
-        if task_type_icon(task.title) in icons
+        if task.category == category
+        or (task.category is None and task_type_icon(task.title) in icons)
     ]
 
 # ==========================================
@@ -359,6 +378,15 @@ def render_category_page(
 ) -> None:
     owner = get_combined_owner()
     scheduler = get_scheduler()
+
+    # Staff who can be assigned to this service (empty for the veterinary page,
+    # which assigns doctors via the Appointments page instead).
+    section = CATEGORY_TO_SECTION.get(category)
+    active_staff = (
+        [member for member in get_clinic().staff_in_section(section) if member.active]
+        if section
+        else []
+    )
 
     st.title(page_title if page_title else f"{icon} {display_name}")
 
@@ -509,6 +537,26 @@ def render_category_page(
                     st.text_input("Reason", value="—", disabled=True, key=f"{category}_disabled_reason")
 
             with st.form(f"add_{category}_task_form", clear_on_submit=True):
+                date_col, staff_col = st.columns(2)
+                with date_col:
+                    appt_date = st.date_input("Date", value=date.today(), key=f"{category}_date")
+                with staff_col:
+                    if active_staff:
+                        staff_labels = [
+                            f"{member.full_name} ({member.role})" if member.role else member.full_name
+                            for member in active_staff
+                        ]
+                        staff_index = st.selectbox(
+                            "Assigned staff",
+                            range(len(active_staff)),
+                            format_func=lambda i: staff_labels[i],
+                            key=f"{category}_staff_select",
+                        )
+                    else:
+                        staff_index = None
+                        if section:
+                            st.caption(f"No active {section} staff — add some on the Staff page.")
+
                 st.write("Time")
                 hour_col, minute_col, period_col = st.columns(3)
                 with hour_col:
@@ -537,13 +585,18 @@ def render_category_page(
                 hour_24 = hour_12 % 12
                 if period == "PM":
                     hour_24 += 12
-                
+
                 time_str = f"{hour_24:02d}:{minute}"
                 selected_pet = selected_owner.pets[selected_pet_index]
+                assignee = active_staff[staff_index].full_name if staff_index is not None else None
 
-                conflict = any(t.time == time_str and not t.completed for t in selected_pet.tasks)
+                # Same pet, same date AND time = a real double-booking.
+                conflict = any(
+                    t.time == time_str and t.due_date == appt_date and not t.completed
+                    for t in selected_pet.tasks
+                )
                 if conflict:
-                    st.session_state["ui_alert_warning"] = f"⚠️ Schedule Conflict: {selected_pet.name} already has a task scheduled at {time_str}. Double-booking detected!"
+                    st.session_state["ui_alert_warning"] = f"⚠️ Schedule Conflict: {selected_pet.name} already has a task scheduled at {time_str} on {appt_date.isoformat()}. Double-booking detected!"
 
                 selected_pet.add_task(
                     Task(
@@ -553,6 +606,9 @@ def render_category_page(
                         priority=priority,
                         frequency=frequency,
                         notes=reason,
+                        due_date=appt_date,
+                        category=category,
+                        assignee=assignee,
                     )
                 )
                 save_owner(owner)

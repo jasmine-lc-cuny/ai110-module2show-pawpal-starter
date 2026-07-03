@@ -1,3 +1,3 @@
-from app_common import render_placeholder_page
+from app_common import render_category_page
 
-render_placeholder_page("Sitting", "🏠")
+render_category_page("sitting", "Sitting", "🏠")

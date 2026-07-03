@@ -24,6 +24,8 @@ TASK_TYPE_ICONS: list[tuple[tuple[str, ...], str]] = [
     (("wash", "bath"), "🧼"),
     (("brush", "comb", "groom"), "🪮"),
     (("vet", "appointment", "checkup", "exam", "surgery", "x-ray", "blood"), "🏥"),
+    (("sitting", "boarding", "daycare", "drop-in", "house sit"), "🏠"),
+    (("training", "obedience", "puppy class", "leash", "trick"), "🎓"),
 ]
 
 
@@ -142,6 +144,8 @@ class Task:
     due_date: date = field(default_factory=date.today)
     completed: bool = False
     notes: str | None = None
+    assignee: str | None = None   # staff member or doctor handling this booking
+    category: str | None = None   # service section: grooming, walking, veterinary, ...
 
     def mark_complete(self):
         """Mark this task as complete."""
@@ -172,6 +176,8 @@ class Task:
             priority=self.priority,
             frequency=self.frequency,
             due_date=next_date,
+            assignee=self.assignee,
+            category=self.category,
         )
 
     def summary(self, pet_name: str | None = None) -> str:
@@ -196,6 +202,8 @@ class Task:
             "due_date": self.due_date.isoformat(),
             "completed": self.completed,
             "notes": self.notes,
+            "assignee": self.assignee,
+            "category": self.category,
         }
 
     @classmethod
@@ -210,6 +218,8 @@ class Task:
             due_date=date.fromisoformat(data["due_date"]),
             completed=data["completed"],
             notes=data.get("notes"),
+            assignee=data.get("assignee"),
+            category=data.get("category"),
         )
 
 
