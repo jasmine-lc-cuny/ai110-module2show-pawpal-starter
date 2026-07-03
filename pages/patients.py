@@ -79,6 +79,13 @@ else:
         pet_behavioral_notes = st.text_area("Behavioral Notes")
         medical_history = st.text_area("Medical history (one condition per line)")
 
+        st.markdown("**Diet**")
+        diet_cols = st.columns(2)
+        with diet_cols[0]:
+            pet_diet_good = st.text_area("Diet should contain (one per line)", key="reg_pet_diet_good")
+        with diet_cols[1]:
+            pet_diet_bad = st.text_area("Diet should not contain (one per line)", key="reg_pet_diet_bad")
+
         st.markdown("**Owner/Contact**")
         contact_cols = st.columns(3)
         existing_owner = owners[owner_choice] if isinstance(owner_choice, int) else None
@@ -108,6 +115,8 @@ else:
             target_owner.phone = owner_phone.strip() or None
             target_owner.email = owner_email.strip() or None
             target_owner.address = owner_address.strip() or None
+            
+            # Construct and append the final Pet item with complete traits
             target_owner.add_pet(
                 Pet(
                     name=pet_name.strip(),
@@ -126,6 +135,12 @@ else:
                     chronic_conditions=[
                         line.strip() for line in medical_history.splitlines() if line.strip()
                     ],
+                    diet_good=[
+                        line.strip() for line in pet_diet_good.splitlines() if line.strip()
+                    ],
+                    diet_bad=[
+                        line.strip() for line in pet_diet_bad.splitlines() if line.strip()
+                    ],
                 )
             )
             save_owners(owners)
@@ -142,9 +157,6 @@ all_patients = [(owner, pet) for owner in owners for pet in owner.pets]
 if not all_patients:
     st.info("No patients yet.")
 else:
-    # A st.expander can't be closed programmatically once the user opens it
-    # (its toggle state lives client-side with no key), so this collapse is a
-    # session flag + button — which lets "Save changes" reliably close it.
     if "show_edit_patient" not in st.session_state:
         st.session_state.show_edit_patient = False
 
@@ -157,9 +169,6 @@ else:
             st.session_state.show_edit_patient = False
             st.rerun()
 
-        # Index-based, then re-fetch owner.pets[i] fresh — st.selectbox() isn't
-        # guaranteed to hand back the same live object across reruns, so a copy
-        # would silently discard edits instead of updating the real Pet.
         edit_index = st.selectbox(
             "Patient to edit",
             range(len(all_patients)),
@@ -245,13 +254,13 @@ else:
             with edit_diet_cols[0]:
                 edited_diet_good = st.text_area(
                     "Diet should contain (one per line)",
-                    value="\n".join(edit_pet.diet_good),
+                    value="\n".join(edit_pet.diet_good) if hasattr(edit_pet, 'diet_good') else "",
                     key="edit_pet_diet_good",
                 )
             with edit_diet_cols[1]:
                 edited_diet_bad = st.text_area(
                     "Diet should not contain (one per line)",
-                    value="\n".join(edit_pet.diet_bad),
+                    value="\n".join(edit_pet.diet_bad) if hasattr(edit_pet, 'diet_bad') else "",
                     key="edit_pet_diet_bad",
                 )
 
@@ -291,7 +300,6 @@ else:
             ]
             edit_pet.status = edited_status
             save_owners(owners)
-            # Collapse the edit section after a successful save.
             st.session_state.show_edit_patient = False
             st.success(f"Updated {edit_pet.name}.")
             st.rerun()
@@ -340,6 +348,16 @@ if visible_patients:
             st.write(f"**Allergies:** {pet.allergies or '—'}")
             st.write(f"**Blood group:** {pet.blood_type or '—'}")
             st.write(f"**Behavioral Notes:** {pet.behavioral_notes or '—'}")
+            
+            if hasattr(pet, 'diet_good') and pet.diet_good:
+                st.write("**Allowed Foods:**")
+                for item in pet.diet_good:
+                    st.markdown(f"- {item}")
+            if hasattr(pet, 'diet_bad') and pet.diet_bad:
+                st.write("**Prohibited Foods:**")
+                for item in pet.diet_bad:
+                    st.markdown(f"- :red[{item}]")
+                    
             st.write(f"**Owner phone:** {owner.phone or '—'}")
             st.write(f"**Owner email:** {owner.email or '—'}")
             st.write(f"**Owner address:** {owner.address or '—'}")
@@ -352,7 +370,4 @@ if visible_patients:
 else:
     st.info("No patients found.")
 
-# No render-time save: mutations save inline. A render-time save would
-# let a stale browser session silently overwrite the data file just by
-# sitting open.
 st.caption("Data is auto-saved to `data.json` after every change, so it persists between app runs.")

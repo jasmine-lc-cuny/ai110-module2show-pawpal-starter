@@ -508,7 +508,6 @@ def _render_dog_cafe_menu_picker() -> str:
     st.caption(items[item_index][2])
     return item_labels[item_index]
 
-
 def render_category_page(
     category: str, display_name: str, icon: str, page_title: str | None = None
 ) -> None:
@@ -537,49 +536,93 @@ def render_category_page(
     else:
         st.subheader(f"Schedule a {display_name} Task")
 
-        # Owner and Pet cascade as two dropdowns: pick the owner, then that
-        # owner's pets as "name (species)". Both live outside the form (like
-        # the "Other (custom)" reveal elsewhere) so the pet list and the
-        # veterinary/menu sub-pickers below react immediately — widgets
-        # inside st.form don't trigger a rerun until submit. Index-based,
-        # then re-fetch the live objects at submit time — st.selectbox()
-        # isn't guaranteed to hand back the same live object across reruns.
-        # Labels precomputed into plain lists so the format_func closes over
-        # no session state (see pet_label's docstring); the "N." prefix
-        # keeps labels unique (same-named owners/pets exist).
-        owners_with_pets = [candidate for candidate in get_owners() if candidate.pets]
-        owner_labels = [
-            f"{i + 1}. {candidate.name}" for i, candidate in enumerate(owners_with_pets)
-        ]
-        selected_owner_index = st.selectbox(
-            "Owner",
-            range(len(owners_with_pets)),
-            format_func=lambda i: owner_labels[i],
-            key=f"{category}_owner_select",
+        # --- NEW: Species Filter Toggle ---
+        species_filter = st.radio(
+            "Filter by Species",
+            ["All", "🐕 Dogs", "🐈 Cats"],
+            horizontal=True,
+            key=f"{category}_species_filter"
         )
-        selected_owner = owners_with_pets[selected_owner_index]
 
-        pet_labels = [
-            f"{i + 1}. {pet_species_icon(pet.species)} {pet.name} ({pet.species})"
-            for i, pet in enumerate(selected_owner.pets)
-        ]
-        selected_pet_index = st.selectbox(
-            "Pet",
-            range(len(selected_owner.pets)),
-            format_func=lambda i: pet_labels[i],
-            # Keyed per owner: the options list changes with the owner, and
-            # reusing one key across different option lists leaves stale state.
-            key=f"{category}_pet_select_{selected_owner_index}",
-        )
-        title = st.selectbox("Task", title_options, key=f"{category}_title_select")
+        # Map the radio choice back to your core data strings
+        filter_map = {"🐕 Dogs": "dog", "🐈 Cats": "cat"}
+        target_species = filter_map.get(species_filter)
 
-        reason = None
-        if category == "veterinary":
-            selected_species = selected_owner.pets[selected_pet_index].species
-            reason = render_veterinary_reason_picker(title, selected_species, key_prefix=category)
-        elif category == "special_services":
-            reason = _render_dog_cafe_menu_picker()
+        # 1. Filter owners down to ONLY those who have pets matching the selected species
+        if target_species:
+            owners_with_pets = [
+                candidate for candidate in get_owners() 
+                if any(pet.species.lower() == target_species for pet in candidate.pets)
+            ]
+        else:
+            owners_with_pets = [candidate for candidate in get_owners() if candidate.pets]
 
+        # Reset the owner index state safely if the list shrinks and the index goes out of bounds
+        if f"{category}_owner_index_state" not in st.session_state or st.session_state[f"{category}_owner_index_state"] >= len(owners_with_pets):
+            st.session_state[f"{category}_owner_index_state"] = 0
+
+        if not owners_with_pets:
+            st.info(f"No owners currently have a {target_species} registered.")
+        else:
+            selected_owner = owners_with_pets[st.session_state[f"{category}_owner_index_state"]]
+            
+            # 2. Filter the pet labels list to match the target species as well
+            filtered_pets = [
+                (i, pet) for i, pet in enumerate(selected_owner.pets)
+                if not target_species or pet.species.lower() == target_species
+            ]
+            
+            pet_labels = [
+                f"{i + 1}. {pet_species_icon(pet.species)} {pet.name} ({pet.species})"
+                for i, pet in filtered_pets
+            ]
+            
+            owner_labels = [
+                f"{i + 1}. {candidate.name}" for i, candidate in enumerate(owners_with_pets)
+            ]
+
+            # --- ROW 1: Pet then Owner (Now Filtering Dynamically!) ---
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Map the selected filtered index back to the real index in owner.pets
+                selected_filtered_index = st.selectbox(
+                    "Pet",
+                    range(len(filtered_pets)),
+                    format_func=lambda i: pet_labels[i],
+                    key=f"{category}_pet_select_{st.session_state[f'{category}_owner_index_state']}_{species_filter}",
+                )
+                selected_pet_index = filtered_pets[selected_filtered_index][0]
+
+            with col2:
+                selected_owner_index = st.selectbox(
+                    "Owner",
+                    range(len(owners_with_pets)),
+                    format_func=lambda i: owner_labels[i],
+                    key=f"{category}_owner_select",
+                )
+                if selected_owner_index != st.session_state[f"{category}_owner_index_state"]:
+                    st.session_state[f"{category}_owner_index_state"] = selected_owner_index
+                    st.rerun()
+
+        # --- ROW 2: Task then Reason ---
+        col3, col4 = st.columns(2)
+        
+        with col3:
+            title = st.selectbox("Task", title_options, key=f"{category}_title_select")
+        
+        with col4:
+            reason = None
+            if category == "veterinary":
+                selected_species = selected_owner.pets[selected_pet_index].species
+                reason = render_veterinary_reason_picker(title, selected_species, key_prefix=category)
+            elif category == "special_services":
+                reason = _render_dog_cafe_menu_picker()
+            else:
+                # Visual alignment guard for categories without a sub-reason (Walking, Grooming, etc.)
+                st.text_input("Reason", value="—", disabled=True, key=f"{category}_disabled_reason")
+
+        # --- SCHEDULING FORM LAYER ---
         with st.form(f"add_{category}_task_form", clear_on_submit=True):
             st.write("Time")
             hour_col, minute_col, period_col = st.columns(3)
@@ -595,8 +638,7 @@ def render_category_page(
                 period = st.selectbox("AM/PM", ["AM", "PM"], label_visibility="collapsed")
 
             if category == "special_services":
-                # An RSVP doesn't need scheduling knobs — a cafe visit gets a
-                # fixed one-hour slot at normal priority, booked once.
+                # An RSVP doesn't need explicit scheduling configurations
                 duration, priority, frequency = 60, "medium", "once"
                 submitted = st.form_submit_button("Dog Cafe RSVP")
             else:
@@ -639,10 +681,6 @@ def render_category_page(
     open_category_tasks = [pair for pair in category_tasks if not pair[1].completed]
     if open_category_tasks:
         st.subheader("Complete a Task")
-        # Index-based, then re-fetch the live pair before mutating — and
-        # mutate that exact task directly rather than going through
-        # Scheduler.mark_task_complete()'s pet-name lookup, which could hit
-        # the wrong pet now that different owners can have same-named pets.
         complete_labels = [
             task_pair_label(i, pet, task, get_owners())
             for i, (pet, task) in enumerate(open_category_tasks)
@@ -667,7 +705,6 @@ def render_category_page(
     # inline before its st.rerun(). A render-time save would let a stale
     # browser session silently overwrite data.json just by sitting open.
     st.caption('Completing, deleting, and reopening tasks lives on "Today\'s Schedule".')
-
 
 def render_placeholder_page(display_name: str, icon: str) -> None:
     """Render a clearly-labeled "coming soon" page for a service category that
