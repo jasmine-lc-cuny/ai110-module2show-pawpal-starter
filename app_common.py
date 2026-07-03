@@ -383,46 +383,66 @@ def render_category_page(
         st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
     elif not title_options:
         st.info(f"{display_name} isn't wired up to specific task types yet.")
-    else:
+else:
         st.subheader(f"Schedule a {display_name} Task")
 
-        # --- CASCADING SPECIES GROUP & SPECIES FILTER ---
-        PET_CATEGORIES = {
-            "🐶 General Companion": ["dog", "cat"],
-            "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
-            "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
-            "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
-            "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
-        }
+        if category == "veterinary":
+            # --- CASCADING SPECIES GROUP & SPECIES FILTER (VET TASKS ONLY) ---
+            PET_CATEGORIES = {
+                "🐶 General Companion": ["dog", "cat"],
+                "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
+                "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
+                "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
+                "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
+            }
 
-        group_options = ["All Groups"] + list(PET_CATEGORIES.keys())
-        selected_group = st.radio(
-            "Filter by Species Group",
-            options=group_options,
-            horizontal=True,
-            key=f"{category}_group_filter"
-        )
+            group_options = ["All Groups"] + list(PET_CATEGORIES.keys())
+            selected_group = st.radio(
+                "Filter by Species Group",
+                options=group_options,
+                horizontal=True,
+                key=f"{category}_group_filter"
+            )
 
-        # Determine which specific species to show based on the chosen group
-        if selected_group == "All Groups":
-            allowed_species = None
+            # Determine which specific species to show based on the chosen group
+            if selected_group == "All Groups":
+                allowed_species = None
+            else:
+                raw_species_list = PET_CATEGORIES[selected_group]
+                
+                # Format the options cleanly with their icons (e.g., "🐕 Dog")
+                species_options = ["All"] + [f"{pet_species_icon(s)} {s.capitalize()}" for s in raw_species_list]
+                
+                selected_species_label = st.radio(
+                    "Filter by Species",
+                    options=species_options,
+                    horizontal=True,
+                    key=f"{category}_species_filter"
+                )
+                
+                if selected_species_label == "All":
+                    allowed_species = raw_species_list
+                else:
+                    # Extract the pure string back out (e.g., pulling "dog" from "🐕 Dog")
+                    target = selected_species_label.split(" ", 1)[-1].lower()
+                    allowed_species = [target]
         else:
-            raw_species_list = PET_CATEGORIES[selected_group]
-            
-            species_options = ["All"] + [f"{pet_species_icon(s)} {s.capitalize()}" for s in raw_species_list]
-            
-            selected_species_label = st.radio(
+            # --- SIMPLE DOGS & CATS FILTER (GROOMING, WALKING, DOG CAFES) ---
+            species_filter = st.radio(
                 "Filter by Species",
-                options=species_options,
+                ["All (Dogs & Cats)", "🐕 Dogs", "🐈 Cats"],
                 horizontal=True,
                 key=f"{category}_species_filter"
             )
             
-            if selected_species_label == "All":
-                allowed_species = raw_species_list
+            filter_map = {"🐕 Dogs": "dog", "🐈 Cats": "cat"}
+            target_species = filter_map.get(species_filter)
+
+            if target_species:
+                allowed_species = [target_species]
             else:
-                target = selected_species_label.split(" ", 1)[-1].lower()
-                allowed_species = [target]
+                # If "All" is clicked on a non-vet page, STRICTLY limit to dogs and cats
+                allowed_species = ["dog", "cat"]
 
         # 1. Filter owners down to ONLY those who have pets matching the active filters
         owners_with_pets = []
