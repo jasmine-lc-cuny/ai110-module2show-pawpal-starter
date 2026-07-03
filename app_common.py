@@ -404,221 +404,234 @@ def render_category_page(
     elif not title_options:
         st.info(f"{display_name} isn't wired up to specific task types yet.")
     else:
-        # Use custom subtitle if provided, otherwise default to "Schedule a [Service] Task"
-        if page_subtitle:
-            st.subheader(page_subtitle)
+        toggle_key = f"show_schedule_{category}"
+        if toggle_key not in st.session_state:
+            st.session_state[toggle_key] = False
+
+        if not st.session_state[toggle_key]:
+            if st.button(f"➕ Book {display_name}", key=f"{category}_show_schedule", use_container_width=True):
+                st.session_state[toggle_key] = True
+                st.rerun()
         else:
-            st.subheader(f"Schedule a {display_name} Task")
+            if st.button("🔼 View less", key=f"{category}_hide_schedule"):
+                st.session_state[toggle_key] = False
+                st.rerun()
 
-        if category == "veterinary":
-            PET_CATEGORIES = {
-                "🐶 General Companion": ["dog", "cat"],
-                "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
-                "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
-                "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
-                "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
-            }
-
-            group_options = ["All Groups"] + list(PET_CATEGORIES.keys())
-            selected_group = st.radio(
-                "Filter by Species Group",
-                options=group_options,
-                horizontal=True,
-                key=f"{category}_group_filter"
-            )
-
-            if selected_group == "All Groups":
-                allowed_species = None
+            # Use custom subtitle if provided, otherwise default to "Schedule a [Service] Task"
+            if page_subtitle:
+                st.subheader(page_subtitle)
             else:
-                raw_species_list = PET_CATEGORIES[selected_group]
-                species_options = ["All"] + [f"{pet_species_icon(s)} {s.capitalize()}" for s in raw_species_list]
+                st.subheader(f"Schedule a {display_name} Task")
+
+            if category == "veterinary":
+                PET_CATEGORIES = {
+                    "🐶 General Companion": ["dog", "cat"],
+                    "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
+                    "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
+                    "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
+                    "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
+                }
+
+                group_options = ["All Groups"] + list(PET_CATEGORIES.keys())
+                selected_group = st.radio(
+                    "Filter by Species Group",
+                    options=group_options,
+                    horizontal=True,
+                    key=f"{category}_group_filter"
+                )
+
+                if selected_group == "All Groups":
+                    allowed_species = None
+                else:
+                    raw_species_list = PET_CATEGORIES[selected_group]
+                    species_options = ["All"] + [f"{pet_species_icon(s)} {s.capitalize()}" for s in raw_species_list]
                 
-                selected_species_label = st.radio(
+                    selected_species_label = st.radio(
+                        "Filter by Species",
+                        options=species_options,
+                        horizontal=True,
+                        key=f"{category}_species_filter"
+                    )
+                
+                    if selected_species_label == "All":
+                        allowed_species = raw_species_list
+                    else:
+                        target = selected_species_label.split(" ", 1)[-1].lower()
+                        allowed_species = [target]
+            else:
+                species_filter = st.radio(
                     "Filter by Species",
-                    options=species_options,
+                    ["All (Dogs & Cats)", "🐕 Dogs", "🐈 Cats"],
                     horizontal=True,
                     key=f"{category}_species_filter"
                 )
-                
-                if selected_species_label == "All":
-                    allowed_species = raw_species_list
-                else:
-                    target = selected_species_label.split(" ", 1)[-1].lower()
-                    allowed_species = [target]
-        else:
-            species_filter = st.radio(
-                "Filter by Species",
-                ["All (Dogs & Cats)", "🐕 Dogs", "🐈 Cats"],
-                horizontal=True,
-                key=f"{category}_species_filter"
-            )
             
-            filter_map = {"🐕 Dogs": "dog", "🐈 Cats": "cat"}
-            target_species = filter_map.get(species_filter)
+                filter_map = {"🐕 Dogs": "dog", "🐈 Cats": "cat"}
+                target_species = filter_map.get(species_filter)
 
-            if target_species:
-                allowed_species = [target_species]
+                if target_species:
+                    allowed_species = [target_species]
+                else:
+                    allowed_species = ["dog", "cat"]
+
+            owners_with_pets = []
+            for candidate in get_owners():
+                if not candidate.pets:
+                    continue
+            
+                has_matching_pet = False
+                for pet in candidate.pets:
+                    if allowed_species is None or pet.species.lower() in allowed_species:
+                        has_matching_pet = True
+                        break
+            
+                if has_matching_pet:
+                    owners_with_pets.append(candidate)
+
+            if f"{category}_owner_index_state" not in st.session_state or st.session_state[f"{category}_owner_index_state"] >= len(owners_with_pets):
+                st.session_state[f"{category}_owner_index_state"] = 0
+
+            if not owners_with_pets:
+                st.info("No owners currently have a pet matching this filter.")
             else:
-                allowed_species = ["dog", "cat"]
-
-        owners_with_pets = []
-        for candidate in get_owners():
-            if not candidate.pets:
-                continue
+                selected_owner = owners_with_pets[st.session_state[f"{category}_owner_index_state"]]
             
-            has_matching_pet = False
-            for pet in candidate.pets:
-                if allowed_species is None or pet.species.lower() in allowed_species:
-                    has_matching_pet = True
-                    break
+                filtered_pets = []
+                for i, pet in enumerate(selected_owner.pets):
+                    if allowed_species is None or pet.species.lower() in allowed_species:
+                        filtered_pets.append((i, pet))
             
-            if has_matching_pet:
-                owners_with_pets.append(candidate)
-
-        if f"{category}_owner_index_state" not in st.session_state or st.session_state[f"{category}_owner_index_state"] >= len(owners_with_pets):
-            st.session_state[f"{category}_owner_index_state"] = 0
-
-        if not owners_with_pets:
-            st.info("No owners currently have a pet matching this filter.")
-        else:
-            selected_owner = owners_with_pets[st.session_state[f"{category}_owner_index_state"]]
+                pet_labels = [
+                    f"{i + 1}. {pet_species_icon(pet.species)} {pet.name} ({pet.species})"
+                    for i, pet in filtered_pets
+                ]
             
-            filtered_pets = []
-            for i, pet in enumerate(selected_owner.pets):
-                if allowed_species is None or pet.species.lower() in allowed_species:
-                    filtered_pets.append((i, pet))
-            
-            pet_labels = [
-                f"{i + 1}. {pet_species_icon(pet.species)} {pet.name} ({pet.species})"
-                for i, pet in filtered_pets
-            ]
-            
-            owner_labels = [
-                f"{i + 1}. {candidate.name}" for i, candidate in enumerate(owners_with_pets)
-            ]
+                owner_labels = [
+                    f"{i + 1}. {candidate.name}" for i, candidate in enumerate(owners_with_pets)
+                ]
 
-            col1, col2 = st.columns(2)
+                col1, col2 = st.columns(2)
             
-            with col1:
-                selected_owner_index = st.selectbox(
-                    "Owner",
-                    range(len(owners_with_pets)),
-                    format_func=lambda i: owner_labels[i],
-                    key=f"{category}_owner_select",
-                )
-                if selected_owner_index != st.session_state[f"{category}_owner_index_state"]:
-                    st.session_state[f"{category}_owner_index_state"] = selected_owner_index
-                    st.rerun()
+                with col1:
+                    selected_owner_index = st.selectbox(
+                        "Owner",
+                        range(len(owners_with_pets)),
+                        format_func=lambda i: owner_labels[i],
+                        key=f"{category}_owner_select",
+                    )
+                    if selected_owner_index != st.session_state[f"{category}_owner_index_state"]:
+                        st.session_state[f"{category}_owner_index_state"] = selected_owner_index
+                        st.rerun()
 
-            filter_state_key = "_".join(allowed_species) if allowed_species else "all"
+                filter_state_key = "_".join(allowed_species) if allowed_species else "all"
 
-            with col2:
-                selected_filtered_index = st.selectbox(
-                    "Pet",
-                    range(len(filtered_pets)),
-                    format_func=lambda i: pet_labels[i],
-                    key=f"{category}_pet_select_{st.session_state[f'{category}_owner_index_state']}_{filter_state_key}",
-                )
-                selected_pet_index = filtered_pets[selected_filtered_index][0]
+                with col2:
+                    selected_filtered_index = st.selectbox(
+                        "Pet",
+                        range(len(filtered_pets)),
+                        format_func=lambda i: pet_labels[i],
+                        key=f"{category}_pet_select_{st.session_state[f'{category}_owner_index_state']}_{filter_state_key}",
+                    )
+                    selected_pet_index = filtered_pets[selected_filtered_index][0]
 
-            col3, col4 = st.columns(2)
+                col3, col4 = st.columns(2)
             
-            with col3:
-                title = st.selectbox("Task", title_options, key=f"{category}_title_select")
+                with col3:
+                    title = st.selectbox("Task", title_options, key=f"{category}_title_select")
             
-            with col4:
-                reason = None
-                if category == "veterinary":
-                    selected_species = selected_owner.pets[selected_pet_index].species
-                    reason = render_veterinary_reason_picker(title, selected_species, key_prefix=category)
-                elif category == "special_services":
-                    reason = _render_dog_cafe_menu_picker()
-                else:
-                    st.text_input("Reason", value="—", disabled=True, key=f"{category}_disabled_reason")
-
-            with st.form(f"add_{category}_task_form", clear_on_submit=True):
-                date_col, staff_col = st.columns(2)
-                with date_col:
-                    appt_date = st.date_input("Date", value=date.today(), key=f"{category}_date")
-                with staff_col:
-                    if active_staff:
-                        staff_labels = [
-                            f"{member.full_name} ({member.role})" if member.role else member.full_name
-                            for member in active_staff
-                        ]
-                        staff_index = st.selectbox(
-                            "Assigned staff",
-                            range(len(active_staff)),
-                            format_func=lambda i: staff_labels[i],
-                            key=f"{category}_staff_select",
-                        )
+                with col4:
+                    reason = None
+                    if category == "veterinary":
+                        selected_species = selected_owner.pets[selected_pet_index].species
+                        reason = render_veterinary_reason_picker(title, selected_species, key_prefix=category)
+                    elif category == "special_services":
+                        reason = _render_dog_cafe_menu_picker()
                     else:
-                        staff_index = None
-                        if section:
-                            st.caption(f"No active {section} staff — add some on the Staff page.")
+                        st.text_input("Reason", value="—", disabled=True, key=f"{category}_disabled_reason")
 
-                st.write("Time")
-                hour_col, minute_col, period_col = st.columns(3)
-                with hour_col:
-                    hour_12 = st.selectbox(
-                        "Hour", list(range(1, 13)), index=7, label_visibility="collapsed"
+                with st.form(f"add_{category}_task_form", clear_on_submit=True):
+                    date_col, staff_col = st.columns(2)
+                    with date_col:
+                        appt_date = st.date_input("Date", value=date.today(), key=f"{category}_date")
+                    with staff_col:
+                        if active_staff:
+                            staff_labels = [
+                                f"{member.full_name} ({member.role})" if member.role else member.full_name
+                                for member in active_staff
+                            ]
+                            staff_index = st.selectbox(
+                                "Assigned staff",
+                                range(len(active_staff)),
+                                format_func=lambda i: staff_labels[i],
+                                key=f"{category}_staff_select",
+                            )
+                        else:
+                            staff_index = None
+                            if section:
+                                st.caption(f"No active {section} staff — add some on the Staff page.")
+
+                    st.write("Time")
+                    hour_col, minute_col, period_col = st.columns(3)
+                    with hour_col:
+                        hour_12 = st.selectbox(
+                            "Hour", list(range(1, 13)), index=7, label_visibility="collapsed"
+                        )
+                    with minute_col:
+                        minute = st.selectbox(
+                            "Minute", ["00", "15", "30", "45"], label_visibility="collapsed"
+                        )
+                    with period_col:
+                        period = st.selectbox("AM/PM", ["AM", "PM"], label_visibility="collapsed")
+
+                    if category == "special_services":
+                        duration, priority, frequency = 60, "medium", "once"
+                        submitted = st.form_submit_button("Dog Cafe RSVP")
+                    else:
+                        duration = st.number_input(
+                            "Duration (minutes)", min_value=1, max_value=240, value=20
+                        )
+                        priority = st.selectbox("Priority", ["high", "medium", "low"])
+                        frequency = st.selectbox("Frequency", ["once", "daily", "weekly"])
+                        submitted = st.form_submit_button(f"Add {display_name} task")
+
+                if submitted:
+                    hour_24 = hour_12 % 12
+                    if period == "PM":
+                        hour_24 += 12
+
+                    time_str = f"{hour_24:02d}:{minute}"
+                    selected_pet = selected_owner.pets[selected_pet_index]
+                    assignee = active_staff[staff_index].full_name if staff_index is not None else None
+
+                    # Same pet, same date AND time = a real double-booking.
+                    conflict = any(
+                        t.time == time_str and t.due_date == appt_date and not t.completed
+                        for t in selected_pet.tasks
                     )
-                with minute_col:
-                    minute = st.selectbox(
-                        "Minute", ["00", "15", "30", "45"], label_visibility="collapsed"
+                    if conflict:
+                        st.session_state["ui_alert_warning"] = f"⚠️ Schedule Conflict: {selected_pet.name} already has a task scheduled at {time_str} on {appt_date.isoformat()}. Double-booking detected!"
+
+                    selected_pet.add_task(
+                        Task(
+                            title=title,
+                            time=time_str,
+                            duration_minutes=int(duration),
+                            priority=priority,
+                            frequency=frequency,
+                            notes=reason,
+                            due_date=appt_date,
+                            category=category,
+                            assignee=assignee,
+                        )
                     )
-                with period_col:
-                    period = st.selectbox("AM/PM", ["AM", "PM"], label_visibility="collapsed")
-
-                if category == "special_services":
-                    duration, priority, frequency = 60, "medium", "once"
-                    submitted = st.form_submit_button("Dog Cafe RSVP")
-                else:
-                    duration = st.number_input(
-                        "Duration (minutes)", min_value=1, max_value=240, value=20
-                    )
-                    priority = st.selectbox("Priority", ["high", "medium", "low"])
-                    frequency = st.selectbox("Frequency", ["once", "daily", "weekly"])
-                    submitted = st.form_submit_button(f"Add {display_name} task")
-
-            if submitted:
-                hour_24 = hour_12 % 12
-                if period == "PM":
-                    hour_24 += 12
-
-                time_str = f"{hour_24:02d}:{minute}"
-                selected_pet = selected_owner.pets[selected_pet_index]
-                assignee = active_staff[staff_index].full_name if staff_index is not None else None
-
-                # Same pet, same date AND time = a real double-booking.
-                conflict = any(
-                    t.time == time_str and t.due_date == appt_date and not t.completed
-                    for t in selected_pet.tasks
-                )
-                if conflict:
-                    st.session_state["ui_alert_warning"] = f"⚠️ Schedule Conflict: {selected_pet.name} already has a task scheduled at {time_str} on {appt_date.isoformat()}. Double-booking detected!"
-
-                selected_pet.add_task(
-                    Task(
-                        title=title,
-                        time=time_str,
-                        duration_minutes=int(duration),
-                        priority=priority,
-                        frequency=frequency,
-                        notes=reason,
-                        due_date=appt_date,
-                        category=category,
-                        assignee=assignee,
-                    )
-                )
-                save_owner(owner)
+                    save_owner(owner)
                 
-                success_message = f"Added {title} for {selected_pet.name}."
-                if reason:
-                    success_message = f"Added {title} ({reason}) for {selected_pet.name}."
+                    success_message = f"Added {title} for {selected_pet.name}."
+                    if reason:
+                        success_message = f"Added {title} ({reason}) for {selected_pet.name}."
                 
-                st.session_state["ui_alert_success"] = success_message
-                st.rerun()
+                    st.session_state["ui_alert_success"] = success_message
+                    st.rerun()
 
     st.divider()
     st.subheader(f"{display_name} Schedule")
