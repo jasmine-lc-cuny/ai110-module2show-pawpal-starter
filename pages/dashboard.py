@@ -8,7 +8,6 @@ from pawpal_system import format_time_12h, pet_species_icon, task_type_icon
 from app_common import get_owners
 
 VET_ICONS = {"🏥", "💊"}
-PATIENTS_PER_PAGE = 8
 
 
 def render_info_card(owner, pet) -> None:
@@ -48,13 +47,13 @@ def render_diet_card(pet) -> None:
     with st.container(border=True):
         st.markdown("**Diet**")
         st.markdown("✅ **The diet should contain:**")
-        if pet.diet_good:
+        if hasattr(pet, 'diet_good') and pet.diet_good:
             for item in pet.diet_good:
                 st.markdown(f"- {item}")
         else:
             st.caption("Not set yet.")
         st.markdown("❌ **The diet should not contain:**")
-        if pet.diet_bad:
+        if hasattr(pet, 'diet_bad') and pet.diet_bad:
             for item in pet.diet_bad:
                 st.markdown(f"- {item}")
         else:
@@ -96,266 +95,156 @@ def render_appointment_reason_card(pet) -> None:
 
 
 owners = get_owners()
-pet_pairs = [(owner, pet) for owner in owners for pet in owner.pets]
+all_patients = [(owner, pet) for owner in owners for pet in owner.pets]
 
 st.title("📊 Dashboard")
-st.caption("A per-patient clinical overview across every owner.")
+st.caption("Search for a patient to view their complete clinical overview.")
 
-if not pet_pairs:
+if not all_patients:
     st.info("Add a pet to see their dashboard here.")
     st.page_link("pages/patients.py", label="Go to Patients", icon="🧾")
 else:
-    # Pill-style patient switcher (like the mockup's Tortilla/Noodle/Charlie
-    # bar), paginated so a large roster shows one row at a time. Duplicate
-    # pet names across different owners get the owner's name appended so two
-    # pills never look identical.
-    name_counts = Counter(pet.name for _, pet in pet_pairs)
+    PET_CATEGORIES = {
+        "🐶 General Companion": ["dog", "cat"],
+        "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
+        "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
+        "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
+        "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
+    }
 
-    def pill_label(index: int) -> str:
-        owner, pet = pet_pairs[index]
-        label = f"{pet_species_icon(pet.species)} {pet.name}"
-        if name_counts[pet.name] > 1:
-            label += f" · {owner.name}"
-        return label
-
-    if "dashboard_selected_pet" not in st.session_state:
-        st.session_state.dashboard_selected_pet = 0
-    if "dashboard_pill_page" not in st.session_state:
-        st.session_state.dashboard_pill_page = 0
-
-    total_pages = (len(pet_pairs) + PATIENTS_PER_PAGE - 1) // PATIENTS_PER_PAGE
-    pill_page = min(st.session_state.dashboard_pill_page, total_pages - 1)
-    page_start = pill_page * PATIENTS_PER_PAGE
-    page_options = list(range(page_start, min(page_start + PATIENTS_PER_PAGE, len(pet_pairs))))
-    # Each page gets its own widget key: reusing one key while the options
-    # list changes underneath it would leave a stale (now-invalid) value in
-    # session state and crash the pills widget on rerun.
-    page_pills_key = f"dashboard_pet_pills_{pill_page}"
-
-    def _select_pet_from_pills() -> None:
-        # on_change only fires on a real click (never on rerender), so this
-        # can't clobber a selection made on a different page the way an
-        # inline "if value != selection" sync would.
-        picked = st.session_state.get(page_pills_key)
-        if picked is not None:
-            st.session_state.dashboard_selected_pet = picked
-
-    nav_prev, nav_label, nav_next = st.columns([1, 6, 1])
-    with nav_prev:
-        if st.button("◀", key="pill_page_prev", disabled=pill_page == 0):
-            new_page = pill_page - 1
-            st.session_state.dashboard_pill_page = new_page
-            # Drop the destination page's old widget state so its pills
-            # re-render highlighting the current selection (or nothing),
-            # instead of a stale pick from an earlier visit.
-            st.session_state.pop(f"dashboard_pet_pills_{new_page}", None)
-            st.rerun()
-    with nav_label:
-        default_on_page = (
-            st.session_state.dashboard_selected_pet
-            if st.session_state.dashboard_selected_pet in page_options
-            else None
+    # ==========================================
+    # 🔍 THE SEARCH & FILTER ENGINE
+    # ==========================================
+    st.markdown("### 🔍 Find a Patient")
+    search_col, filter_col = st.columns([2, 1])
+    
+    with search_col:
+        search_query = st.text_input("Search by pet or owner name...", placeholder="e.g. Snoopy or Michael", label_visibility="collapsed")
+    with filter_col:
+        selected_group = st.selectbox(
+            "Filter by Species Group",
+            options=["All Patients"] + list(PET_CATEGORIES.keys()),
+            label_visibility="collapsed"
         )
-        st.pills(
-            "Patient",
-            page_options,
-            format_func=pill_label,
-            default=default_on_page,
-            key=page_pills_key,
-            on_change=_select_pet_from_pills,
-            label_visibility="collapsed",
+
+    # --- DYNAMIC SPECIES PILLS ---
+    if selected_group == "All Patients":
+        allowed_species = None
+        selected_species_label = "All"
+    else:
+        raw_species_list = PET_CATEGORIES[selected_group]
+        species_options = ["All"] + [f"{pet_species_icon(s)} {s.capitalize()}" for s in raw_species_list]
+        
+        # This will render a gorgeous pill selector directly under the search bar
+        selected_species_label = st.pills(
+            "Filter by specific species",
+            options=species_options,
+            default="All",
+            key="dashboard_species_pills",
+            label_visibility="collapsed"
         )
-        st.caption(f"Patients {page_start + 1}–{page_options[-1] + 1} of {len(pet_pairs)}")
-    with nav_next:
-        if st.button("▶", key="pill_page_next", disabled=pill_page >= total_pages - 1):
-            new_page = pill_page + 1
-            st.session_state.dashboard_pill_page = new_page
-            st.session_state.pop(f"dashboard_pet_pills_{new_page}", None)
-            st.rerun()
 
-    selected_index = min(st.session_state.dashboard_selected_pet, len(pet_pairs) - 1)
-    selected_owner, selected_pet = pet_pairs[selected_index]
+        if not selected_species_label or selected_species_label == "All":
+            allowed_species = raw_species_list
+        else:
+            # Extract pure string (e.g. pulling "dog" from "🐕 Dog")
+            target = selected_species_label.split(" ", 1)[-1].lower()
+            allowed_species = [target]
 
-    top_row = st.columns(3)
-    with top_row[0]:
-        render_info_card(selected_owner, selected_pet)
-    with top_row[1]:
-        render_visit_statistics_card(selected_pet)
-    with top_row[2]:
-        render_diet_card(selected_pet)
+    # Apply the filters
+    query_lower = search_query.strip().lower()
 
-    middle_row = st.columns(2)
-    with middle_row[0]:
-        render_chronic_card(selected_pet)
-    with middle_row[1]:
-        render_appointment_reason_card(selected_pet)
+    filtered_patients = []
+    for owner, pet in all_patients:
+        matches_search = not query_lower or query_lower in pet.name.lower() or query_lower in owner.name.lower()
+        
+        if selected_group == "All Patients":
+            matches_species = True
+        elif "General Companion" in selected_group and (not selected_species_label or selected_species_label == "All"):
+            all_known_species = [s for g in PET_CATEGORIES.values() for s in g]
+            matches_species = pet.species.lower() in allowed_species or pet.species.lower() not in all_known_species
+        else:
+            matches_species = pet.species.lower() in allowed_species
+            
+        if matches_search and matches_species:
+            filtered_patients.append((owner, pet))
 
     st.divider()
-    with st.container(border=True):
-        today = date.today()
-        all_task_triples = [
-            (owner, pet, task)
-            for owner, pet in pet_pairs
-            for task in pet.tasks
-        ]
-        open_today = [
-            triple for triple in all_task_triples
-            if triple[2].due_date == today and not triple[2].completed
-        ]
-        st.markdown("**Today**")
-        st.metric("Appointments", len(open_today))
 
-        st.markdown("**Upcoming Appointments**")
-        upcoming = sorted(
-            (
-                triple for triple in all_task_triples
-                if triple[2].due_date >= today and not triple[2].completed
-            ),
-            key=lambda triple: (triple[2].due_date, triple[2].time),
-        )[:5]
-        if upcoming:
-            for upcoming_owner, upcoming_pet, upcoming_task in upcoming:
-                st.write(
-                    f"{task_type_icon(upcoming_task.title)} {upcoming_pet.name} — "
-                    f"{upcoming_task.title} ({format_time_12h(upcoming_task.time)}, "
-                    f"{upcoming_task.due_date.isoformat()})"
-                )
-        else:
-            st.caption("No upcoming appointments.")
-
-# ==========================================
-# 📊 CATEGORIZED PATIENTS DIRECTORY (TABS)
-# ==========================================
-st.divider()
-st.subheader("Patients Directory")
-
-PET_CATEGORIES = {
-    "🐶 General Companion": ["dog", "cat"],
-    "🐹 Exotic Small Pet": ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig", "ferret", "hedgehog", "sugar glider", "squirrel"],
-    "🦜 Exotic Avian": ["budgie", "canary", "finch", "parrot", "cockatiel", "conure", "chicken", "duck", "goose", "pigeon", "owl", "falcon", "snowy owl"],
-    "🦎 Reptiles & Amphibians": ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "turtle", "tortoise", "corn snake", "ball python", "king snake", "frog", "toad", "newt", "salamander"],
-    "🐠 Fish & Invertebrates": ["betta", "guppy", "platy", "swordtail", "molly", "tetra", "goldfish", "danio", "minnow", "cichlid", "pleco", "clownfish", "damselfish", "goby", "blenny"]
-}
-
-selected_group = st.radio(
-    "Filter by Species Group",
-    options=list(PET_CATEGORIES.keys()),
-    horizontal=True,
-    key="dashboard_directory_group"
-)
-
-search_query = st.text_input("Search by pet or owner name", key="dashboard_search")
-
-def render_patient_cards(patient_list):
-    if not patient_list:
-        st.info("No patients matching this sub-category.")
-        return
-        
-    for owner, pet in patient_list:
-        status_flag = "" if pet.status == "Alive" else " 🪦"
-        with st.expander(f"{pet_species_icon(pet.species)} {pet.name}{status_flag} — owned by {owner.name}"):
-            info_cols = st.columns(4)
-            info_cols[0].metric("Species", pet.species.capitalize())
-            info_cols[1].metric("Sex", pet.sex or "—")
-            info_cols[2].metric("Age", pet.age if pet.age is not None else "—")
-            info_cols[3].metric("Status", pet.status)
-            
-            st.write(f"**Breed:** {pet.breed or '—'}")
-            st.write(f"**Weight:** {pet.weight or '—'}  |  **Height:** {pet.height or '—'}")
-            st.write(f"**Color/Markings:** {pet.color_markings or '—'}")
-            st.write(f"**Microchip #:** {pet.microchip_number or '—'}")
-            st.write(f"**Spayed/Neutered:** {pet.spayed_neutered or 'Unknown'}")
-            st.write(f"**Allergies:** {pet.allergies or '—'}")
-            st.write(f"**Blood group:** {pet.blood_type or '—'}")
-            st.write(f"**Behavioral Notes:** {pet.behavioral_notes or '—'}")
-            
-            if hasattr(pet, 'diet_good') and pet.diet_good:
-                st.write("**Allowed Foods:**")
-                for item in pet.diet_good:
-                    st.markdown(f"- {item}")
-            if hasattr(pet, 'diet_bad') and pet.diet_bad:
-                st.write("**Prohibited Foods:**")
-                for item in pet.diet_bad:
-                    st.markdown(f"- :red[{item}]")
-                    
-            st.write(f"**Owner phone:** {owner.phone or '—'}")
-            st.write(f"**Owner email:** {owner.email or '—'}")
-            st.write(f"**Owner address:** {owner.address or '—'}")
-            if pet.chronic_conditions:
-                st.write("**Medical history:**")
-                for entry in pet.chronic_conditions:
-                    st.markdown(f"- {entry}")
-            else:
-                st.write("**Medical history:** —")
-
-all_patients = [(owner, pet) for owner in get_owners() for pet in owner.pets]
-allowed_species = PET_CATEGORIES[selected_group]
-query_lower = search_query.strip().lower()
-
-filtered_group_patients = []
-for owner, pet in all_patients:
-    matches_search = not query_lower or query_lower in pet.name.lower() or query_lower in owner.name.lower()
-    
-    if selected_group == "🐶 General Companion":
-        all_known_species = [s for g in PET_CATEGORIES.values() for s in g]
-        matches_species = pet.species.lower() in allowed_species or pet.species.lower() not in all_known_species
+    # ==========================================
+    # 🩺 DYNAMIC DASHBOARD VIEWER
+    # ==========================================
+    if not filtered_patients:
+        st.warning("No patients match your search criteria.")
     else:
-        matches_species = pet.species.lower() in allowed_species
+        name_counts = Counter(pet.name for _, pet in filtered_patients)
+
+        def pill_label(index: int) -> str:
+            owner, pet = filtered_patients[index]
+            label = f"{pet_species_icon(pet.species)} {pet.name}"
+            if name_counts[pet.name] > 1:
+                label += f" · {owner.name}"
+            return label
+
+        # The clean, scalable Drop-down menu
+        selected_idx = st.selectbox(
+            "Select a matching patient:",
+            options=range(len(filtered_patients)),
+            format_func=pill_label,
+            key="dash_dynamic_select"
+        )
+
+        # Safety fallback in case the search changes and resets the index
+        if selected_idx is None or selected_idx >= len(filtered_patients):
+            selected_idx = 0
+
+        selected_owner, selected_pet = filtered_patients[selected_idx]
+
+        st.markdown(f"### {pet_species_icon(selected_pet.species)} {selected_pet.name}'s Chart")
         
-    if matches_search and matches_species:
-        filtered_group_patients.append((owner, pet))
+        top_row = st.columns(3)
+        with top_row[0]:
+            render_info_card(selected_owner, selected_pet)
+        with top_row[1]:
+            render_visit_statistics_card(selected_pet)
+        with top_row[2]:
+            render_diet_card(selected_pet)
 
-if not filtered_group_patients:
-    st.info("No patients currently registered under this category.")
-else:
-    if "General Companion" in selected_group:
-        tab_titles = ["🐕 Dogs", "🐈 Cats", "🐾 Others"]
-        tabs = st.tabs(tab_titles)
-        with tabs[0]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() == "dog"])
-        with tabs[1]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() == "cat"])
-        with tabs[2]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() not in ["dog", "cat"]])
+        middle_row = st.columns(2)
+        with middle_row[0]:
+            render_chronic_card(selected_pet)
+        with middle_row[1]:
+            render_appointment_reason_card(selected_pet)
 
-    elif "Exotic Small Pet" in selected_group:
-        tab_titles = ["🐿️ Rodents", "🦔 Special Mammals"]
-        tabs = st.tabs(tab_titles)
-        rodents = ["rabbit", "bunny", "hamster", "gerbil", "mouse", "mice", "rat", "chinchilla", "guinea pig"]
-        with tabs[0]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() in rodents])
-        with tabs[1]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() not in rodents])
+        st.divider()
+        with st.container(border=True):
+            today = date.today()
+            all_task_triples = [
+                (owner, pet, task)
+                for owner, pet in filtered_patients
+                for task in pet.tasks
+            ]
+            open_today = [
+                triple for triple in all_task_triples
+                if triple[2].due_date == today and not triple[2].completed
+            ]
+            st.markdown("**Today's Active Appointments (For Searched Patients)**")
+            st.metric("Appointments", len(open_today))
 
-    elif "Exotic Avian" in selected_group:
-        tab_titles = ["🐤 Small Birds", "🦅 Large Birds & Raptors", "🐓 Poultry"]
-        tabs = st.tabs(tab_titles)
-        small_birds = ["budgie", "canary", "finch", "cockatiel"]
-        poultry = ["chicken", "duck", "goose", "pigeon"]
-        with tabs[0]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() in small_birds])
-        with tabs[1]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() not in small_birds and p.species.lower() not in poultry])
-        with tabs[2]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() in poultry])
-
-    elif "Reptiles & Amphibians" in selected_group:
-        tab_titles = ["🦎 Lizards & Snakes", "🐢 Chelonians", "🐸 Amphibians"]
-        tabs = st.tabs(tab_titles)
-        snakes_lizards = ["bearded dragon", "leopard gecko", "crested gecko", "chameleon", "iguana", "skink", "corn snake", "ball python", "king snake"]
-        chelonians = ["turtle", "tortoise"]
-        with tabs[0]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() in snakes_lizards])
-        with tabs[1]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() in chelonians])
-        with tabs[2]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() not in snakes_lizards and p.species.lower() not in chelonians])
-
-    elif "Fish & Invertebrates" in selected_group:
-        tab_titles = ["💧 Freshwater", "🌊 Saltwater"]
-        tabs = st.tabs(tab_titles)
-        saltwater = ["clownfish", "damselfish", "goby", "blenny"]
-        with tabs[0]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() not in saltwater])
-        with tabs[1]:
-            render_patient_cards([(o, p) for o, p in filtered_group_patients if p.species.lower() in saltwater])
+            st.markdown("**Upcoming Appointments**")
+            upcoming = sorted(
+                (
+                    triple for triple in all_task_triples
+                    if triple[2].due_date >= today and not triple[2].completed
+                ),
+                key=lambda triple: (triple[2].due_date, triple[2].time),
+            )[:5]
+            if upcoming:
+                for upcoming_owner, upcoming_pet, upcoming_task in upcoming:
+                    st.write(
+                        f"{task_type_icon(upcoming_task.title)} {upcoming_pet.name} — "
+                        f"{upcoming_task.title} ({format_time_12h(upcoming_task.time)}, "
+                        f"{upcoming_task.due_date.isoformat()})"
+                    )
+            else:
+                st.caption("No upcoming appointments.")
