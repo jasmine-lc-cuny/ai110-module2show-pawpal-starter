@@ -32,7 +32,7 @@ CLINIC_PATH = "clinic.json"
 # The "today" the seeded schedule is anchored to, so the "due today" batch and
 # its deliberate conflicts land on a specific demo date instead of whatever
 # day happens to run this script. Set to None to use the real date.today().
-ANCHOR_DATE = date(2026, 7, 7)
+ANCHOR_DATE = date(2026, 7, 6)
 
 random.seed(2026)  # reproducible demo dataset
 
