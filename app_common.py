@@ -286,6 +286,28 @@ def _load_clinic_from_disk() -> Clinic | None:
 def _owners_have_tasks(owners: list[Owner]) -> bool:
     return any(pet.tasks for owner in owners for pet in owner.pets)
 
+
+def _clinic_doctors_need_refresh(clinic: Clinic | None) -> bool:
+    """Return True when an existing clinic file still has the old placeholder
+    doctor labels (for example degree abbreviations sitting in the
+    Specialization column) and should be reseeded."""
+    if clinic is None or not clinic.doctors:
+        return False
+
+    stale_labels = {
+        "dvm",
+        "dvm, dacvs",
+        "dvm, dacvim",
+        "veterinary school",
+        "",
+    }
+    observed = {
+        doctor.specialization.strip().lower()
+        for doctor in clinic.doctors
+        if doctor.specialization is not None
+    }
+    return bool(observed) and observed.issubset(stale_labels)
+
 def ensure_demo_data() -> None:
     """Seed the demo roster and schedule if the local data files are missing."""
     disk_owners = _load_owners_from_disk()
@@ -295,9 +317,17 @@ def ensure_demo_data() -> None:
     tasks_missing = bool(disk_owners) and not _owners_have_tasks(disk_owners)
     clinic_missing = disk_clinic is None
     doctors_missing = clinic_missing or not disk_clinic.doctors
+    doctors_stale = _clinic_doctors_need_refresh(disk_clinic)
     staff_missing = clinic_missing or not disk_clinic.staff
 
-    if not owners_missing_or_empty and not tasks_missing and not clinic_missing and not doctors_missing and not staff_missing:
+    if (
+        not owners_missing_or_empty
+        and not tasks_missing
+        and not clinic_missing
+        and not doctors_missing
+        and not doctors_stale
+        and not staff_missing
+    ):
         return
 
     if owners_missing_or_empty:
@@ -310,7 +340,7 @@ def ensure_demo_data() -> None:
 
         seed_staff()
 
-    if doctors_missing:
+    if doctors_missing or doctors_stale:
         from seed_doctors import seed_doctors
 
         seed_doctors()
