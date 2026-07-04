@@ -69,6 +69,13 @@ def render_month_grid(owner, target_year: int, target_month: int) -> None:
         weeks_html += f'<div class="pp-cal-week">{week_html}</div>'
 
     calendar_html = f"""
+    <style>
+    .pp-cal-header {{ flex:1; text-align:center; font-size:0.75rem; color:#888; padding:4px 0; }}
+    .pp-cal-week {{ display:flex; gap:4px; margin-bottom:4px; }}
+    .pp-cal-cell {{ flex:1; min-height:80px; background:rgba(255,255,255,0.05); border-radius:8px;
+                    padding:6px; display:flex; flex-direction:column; gap:2px; box-sizing:border-box; }}
+    .pp-cal-outside {{ opacity:0.35; }}
+    .pp-cal-today {{ border:2px solid #3B5BDB; }}
     .pp-cal-daynum {{ font-size:0.8rem; color:#ccc; font-weight:600; margin-bottom:2px; }}
     .pp-cal-badge {{ border-radius:6px; color:white; font-size:0.65rem; padding:1px 4px;
                       overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }}
