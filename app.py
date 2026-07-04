@@ -7,7 +7,6 @@ session, so the same Owner object is used no matter which page is active.
 """
 
 import streamlit as st
-from pathlib import Path
 
 from app_common import (
     get_combined_owner,
@@ -37,7 +36,6 @@ def home_page():
     st.caption("Welcome back! What would you like to do today?")
     render_live_clock("Home dashboard")
     render_page_banner("home")
-    st.image(str(Path("assets") / "homepage.png"), use_container_width=True)
 
     st.subheader("🛎️ Book a Service")
     cols = st.columns(3)

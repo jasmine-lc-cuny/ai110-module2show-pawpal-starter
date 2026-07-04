@@ -24,11 +24,11 @@ def render_info_card(owner, pet) -> None:
 
 
 def render_visit_statistics_card(pet) -> None:
-    """Render a large emoji placeholder in the visit-statistics card."""
+    """Render a large emoji placeholder in the middle card."""
     with st.container(border=True):
-        st.markdown("**📈 Visit statistics**")
+        st.markdown("**📈**")
         st.markdown(
-            "<div style='text-align:center; font-size:40px; line-height:1.2; padding: 1.5rem 0 1rem;'>"
+            "<div style='text-align:center; font-size:40px; line-height:1.2; padding: 1rem 0 0.75rem;'>"
             "📈"
             "</div>",
             unsafe_allow_html=True,
