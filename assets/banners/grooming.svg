@@ -1,0 +1,20 @@
+<svg width="1600" height="260" viewBox="0 0 1600 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="260" rx="28" fill="#F5EFE5"/>
+  <circle cx="150" cy="130" r="82" fill="#F9D37A"/>
+  <circle cx="150" cy="130" r="55" fill="#FFFFFF"/>
+  <rect x="103" y="123" width="70" height="18" rx="9" fill="#2A4B7C" transform="rotate(-20 103 123)"/>
+  <rect x="164" y="96" width="16" height="72" rx="8" fill="#2A4B7C" transform="rotate(38 164 96)"/>
+  <rect x="104" y="150" width="82" height="14" rx="7" fill="#F28C6B"/>
+  <circle cx="112" cy="83" r="10" fill="#2A4B7C"/>
+  <circle cx="146" cy="73" r="10" fill="#2A4B7C"/>
+  <circle cx="182" cy="83" r="10" fill="#2A4B7C"/>
+  <text x="280" y="112" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#1F2A44">Grooming</text>
+  <text x="280" y="160" font-family="Arial, sans-serif" font-size="28" fill="#546178">Brush, wash, trim, and keep every pet polished.</text>
+  <rect x="1170" y="58" width="300" height="144" rx="24" fill="#FFFFFF" stroke="#E2D7C8" stroke-width="3"/>
+  <circle cx="1255" cy="130" r="48" fill="#F2A65A"/>
+  <path d="M1234 136C1246 156 1263 160 1280 153" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1238 121C1250 110 1264 110 1274 120" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <rect x="1335" y="92" width="92" height="18" rx="9" fill="#3C9D9B"/>
+  <rect x="1335" y="120" width="70" height="18" rx="9" fill="#F28C6B"/>
+  <rect x="1335" y="148" width="108" height="18" rx="9" fill="#F9D37A"/>
+</svg>

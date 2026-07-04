@@ -1,0 +1,17 @@
+<svg width="1600" height="260" viewBox="0 0 1600 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="260" rx="28" fill="#F5EFE5"/>
+  <circle cx="140" cy="130" r="82" fill="#7AB8C2"/>
+  <path d="M110 156C125 129 151 114 181 114" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="180" cy="114" r="12" fill="#FFFFFF"/>
+  <circle cx="113" cy="164" r="10" fill="#FFFFFF"/>
+  <circle cx="147" cy="182" r="10" fill="#FFFFFF"/>
+  <circle cx="183" cy="164" r="10" fill="#FFFFFF"/>
+  <text x="280" y="112" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#1F2A44">Walking</text>
+  <text x="280" y="160" font-family="Arial, sans-serif" font-size="28" fill="#546178">Fresh air, steady steps, and happy paws on the move.</text>
+  <rect x="1130" y="72" width="350" height="116" rx="28" fill="#FFFFFF" stroke="#E2D7C8" stroke-width="3"/>
+  <path d="M1180 150C1208 120 1240 108 1274 108" stroke="#F28C6B" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="1278" cy="108" r="12" fill="#F28C6B"/>
+  <rect x="1330" y="106" width="90" height="18" rx="9" fill="#3C9D9B"/>
+  <rect x="1330" y="134" width="120" height="18" rx="9" fill="#F9D37A"/>
+  <rect x="1330" y="162" width="100" height="18" rx="9" fill="#F28C6B"/>
+</svg>

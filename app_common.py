@@ -26,7 +26,17 @@ from pawpal_system import (
 DATA_PATH = Path("data.json")
 CLINIC_DATA_PATH = Path("clinic.json")
 UPLOADS_PATH = Path("uploads")
+BANNER_DIR = Path("assets") / "banners"
 NEW_OWNER_CHOICE = "+ Add new owner"
+
+PAGE_BANNERS = {
+    "home": Path("assets") / "homepage.png",
+    "grooming": BANNER_DIR / "grooming.svg",
+    "sitting": BANNER_DIR / "sitting.svg",
+    "training": BANNER_DIR / "training.svg",
+    "walking": BANNER_DIR / "walking.svg",
+    "special_services": BANNER_DIR / "dog_cafe.svg",
+}
 
 APPOINTMENT_STATUS_COLORS = {
     "Pending": "yellow",
@@ -369,6 +379,13 @@ def save_clinic(clinic: Clinic) -> None:
     clinic.save_to_json(str(CLINIC_DATA_PATH))
 
 
+def render_page_banner(page_key: str) -> None:
+    """Render a page banner image if a matching asset exists."""
+    banner_path = PAGE_BANNERS.get(page_key)
+    if banner_path and banner_path.exists():
+        st.image(str(banner_path), use_container_width=True)
+
+
 def render_live_clock(note: str | None = None) -> None:
     """Render a small live clock card that updates client-side every second."""
     current = datetime.now()
@@ -564,6 +581,7 @@ def render_category_page(
 
     st.title(page_title if page_title else f"{icon} {display_name}")
     render_live_clock(f"{display_name} view")
+    render_page_banner(category)
 
     if "ui_alert_success" in st.session_state:
         st.success(st.session_state.pop("ui_alert_success"))

@@ -1,0 +1,18 @@
+<svg width="1600" height="260" viewBox="0 0 1600 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="260" rx="28" fill="#F5EFE5"/>
+  <rect x="70" y="68" width="220" height="124" rx="28" fill="#FFFFFF" stroke="#E2D7C8" stroke-width="3"/>
+  <circle cx="142" cy="126" r="42" fill="#7AB8C2"/>
+  <circle cx="128" cy="120" r="10" fill="#FFFFFF"/>
+  <circle cx="156" cy="120" r="10" fill="#FFFFFF"/>
+  <path d="M123 146C136 160 153 160 167 146" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <rect x="200" y="116" width="62" height="18" rx="9" fill="#F28C6B"/>
+  <rect x="200" y="144" width="82" height="18" rx="9" fill="#F9D37A"/>
+  <text x="340" y="112" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#1F2A44">Sitting</text>
+  <text x="340" y="160" font-family="Arial, sans-serif" font-size="28" fill="#546178">Cozy care, calm check-ins, and comfy company.</text>
+  <rect x="1160" y="70" width="360" height="120" rx="26" fill="#FFFFFF" stroke="#E2D7C8" stroke-width="3"/>
+  <rect x="1210" y="95" width="110" height="70" rx="18" fill="#7AB8C2"/>
+  <circle cx="1265" cy="130" r="28" fill="#FFFFFF"/>
+  <rect x="1360" y="100" width="120" height="18" rx="9" fill="#3C9D9B"/>
+  <rect x="1360" y="128" width="96" height="18" rx="9" fill="#F28C6B"/>
+  <rect x="1360" y="156" width="140" height="18" rx="9" fill="#F9D37A"/>
+</svg>

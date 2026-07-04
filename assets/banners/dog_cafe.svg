@@ -1,0 +1,15 @@
+<svg width="1600" height="260" viewBox="0 0 1600 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="260" rx="28" fill="#F5EFE5"/>
+  <rect x="72" y="70" width="228" height="120" rx="28" fill="#FFFFFF" stroke="#E2D7C8" stroke-width="3"/>
+  <rect x="102" y="108" width="56" height="52" rx="12" fill="#F9D37A"/>
+  <path d="M146 110C160 96 178 96 190 110" stroke="#F28C6B" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="182" cy="138" r="8" fill="#3C9D9B"/>
+  <text x="340" y="112" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#1F2A44">Dog Cafe</text>
+  <text x="340" y="160" font-family="Arial, sans-serif" font-size="28" fill="#546178">Cozy treats, playful vibes, and a dog-friendly menu.</text>
+  <rect x="1130" y="70" width="360" height="120" rx="28" fill="#FFFFFF" stroke="#E2D7C8" stroke-width="3"/>
+  <rect x="1180" y="96" width="100" height="72" rx="20" fill="#3C9D9B"/>
+  <path d="M1230 106C1244 106 1255 117 1255 130C1255 143 1244 154 1230 154" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <rect x="1305" y="100" width="136" height="18" rx="9" fill="#F28C6B"/>
+  <rect x="1305" y="128" width="110" height="18" rx="9" fill="#F9D37A"/>
+  <rect x="1305" y="156" width="150" height="18" rx="9" fill="#7AB8C2"/>
+</svg>
