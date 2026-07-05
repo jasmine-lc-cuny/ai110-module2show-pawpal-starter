@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 import sys
+import argparse
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -36,6 +37,9 @@ TASK_TEMPLATES = [
     ("Breakfast", "special_services", 15, "medium", "daily"),
     ("Vet Appointment", "veterinary", 30, "high", "once"),
 ]
+
+DOG_SERVICE_CATEGORIES = {"walking", "grooming", "training", "special_services"}
+CAT_SERVICE_CATEGORIES = {"grooming", "sitting"}
 
 
 def _round_up_to_quarter(moment: datetime) -> datetime:
@@ -72,26 +76,24 @@ def _doctor_for_species(clinic: Clinic, species: str) -> Doctor:
     return random.choice(active_doctors)
 
 
-def seed_random_appointments() -> None:
-    """Add fresh demo appointments and light task coverage across the existing pets."""
-    now = datetime.now()
-    anchor = _round_up_to_quarter(now)
+def _seed_service_tasks(owners, anchor: datetime, *, species: str, categories: set[str]) -> int:
+    seeded = 0
+    for owner_index, owner in enumerate(owners):
+        for pet_index, pet in enumerate(owner.pets):
+            if pet.species.lower() != species:
+                continue
 
-    owners = load_owners_from_json(str(DATA_PATH)) if DATA_PATH.exists() else []
-    clinic = Clinic.load_from_json(str(CLINIC_PATH)) if CLINIC_PATH.exists() else Clinic()
-
-    _ensure_doctors(clinic)
-
-    if not owners:
-        print("No owners found in data.json. Run the animal/client seed first.")
-        return
-
-    if not any(pet.tasks for owner in owners for pet in owner.pets):
-        for owner_index, owner in enumerate(owners):
-            for pet_index, pet in enumerate(owner.pets):
-                title, category, duration, priority, frequency = TASK_TEMPLATES[(owner_index + pet_index) % len(TASK_TEMPLATES)]
-                due_date = anchor.date() + timedelta(days=(owner_index + pet_index) % 3)
-                time_str = (anchor + timedelta(minutes=10 + owner_index * 6 + pet_index * 9)).strftime("%H:%M")
+            pet.tasks = []
+            available_templates = [tpl for tpl in TASK_TEMPLATES if tpl[1] in categories]
+            for task_offset in range(2):
+                title, category, duration, priority, frequency = available_templates[
+                    (owner_index + pet_index + task_offset) % len(available_templates)
+                ]
+                due_date = anchor.date() + timedelta(days=(owner_index + pet_index + task_offset) % 2)
+                time_str = (
+                    anchor
+                    + timedelta(minutes=10 + owner_index * 6 + pet_index * 9 + task_offset * 13)
+                ).strftime("%H:%M")
                 pet.add_task(
                     Task(
                         title=title,
@@ -104,16 +106,17 @@ def seed_random_appointments() -> None:
                         notes=f"Seeded task near {anchor.strftime('%I:%M %p').lstrip('0')}",
                     )
                 )
+                seeded += 1
+    return seeded
 
+
+def _seed_vet_appointments(owners, clinic: Clinic, anchor: datetime) -> list[tuple[str, str, str, datetime, str, str, str]]:
     clinic.appointments = []
     all_pets = [pet for owner in owners for pet in owner.pets]
     if not all_pets:
-        print("No pets found to seed appointments for.")
-        return
+        return []
 
-    random.seed(anchor.toordinal())
-
-    appointment_rows = []
+    rows = []
     for index, pet in enumerate(random.sample(all_pets, min(len(all_pets), 18))):
         owner = next(owner for owner in owners if pet in owner.pets)
         doctor = _doctor_for_species(clinic, pet.species)
@@ -133,15 +136,60 @@ def seed_random_appointments() -> None:
                 status=status,
             )
         )
-        appointment_rows.append((owner.name, pet.name, doctor.full_name, due_date, time_str, status, reason))
+        rows.append((owner.name, pet.name, doctor.full_name, due_date, time_str, status, reason))
+    return rows
+
+
+def seed_random_appointments(mode: str = "all") -> None:
+    """Seed either dog services, cat services, vet appointments, or all of them."""
+    now = datetime.now()
+    anchor = _round_up_to_quarter(now)
+
+    owners = load_owners_from_json(str(DATA_PATH)) if DATA_PATH.exists() else []
+    clinic = Clinic.load_from_json(str(CLINIC_PATH)) if CLINIC_PATH.exists() else Clinic()
+
+    _ensure_doctors(clinic)
+
+    if not owners:
+        print("No owners found in data.json. Run the animal/client seed first.")
+        return
+
+    random.seed(anchor.toordinal())
+
+    appointment_rows = []
+    service_task_count = 0
+
+    if mode in {"all", "dogs"}:
+        service_task_count += _seed_service_tasks(owners, anchor, species="dog", categories=DOG_SERVICE_CATEGORIES)
+    if mode in {"all", "cats"}:
+        service_task_count += _seed_service_tasks(owners, anchor, species="cat", categories=CAT_SERVICE_CATEGORIES)
+
+    if mode in {"all", "vet"}:
+        appointment_rows = _seed_vet_appointments(owners, clinic, anchor)
 
     save_owners_to_json(owners, str(DATA_PATH))
     clinic.save_to_json(str(CLINIC_PATH))
 
-    print(f"📅 Seeded {len(appointment_rows)} random appointments into clinic.json")
-    for owner_name, pet_name, doctor_name, due_date, time_str, status, reason in appointment_rows[:10]:
-        print(f"   {due_date.isoformat()} {time_str} - {owner_name} / {pet_name} with {doctor_name} [{status}] ({reason})")
+    if service_task_count:
+        print(f"🐾 Seeded {service_task_count} service tasks for mode '{mode}'.")
+    if appointment_rows:
+        print(f"📅 Seeded {len(appointment_rows)} random appointments into clinic.json")
+        for owner_name, pet_name, doctor_name, due_date, time_str, status, reason in appointment_rows[:10]:
+            print(f"   {due_date.isoformat()} {time_str} - {owner_name} / {pet_name} with {doctor_name} [{status}] ({reason})")
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Seed PawPal demo services and appointments.")
+    parser.add_argument(
+        "mode",
+        nargs="?",
+        default="all",
+        choices=["all", "dogs", "cats", "vet"],
+        help="What to seed: all, dog services, cat services, or vet appointments.",
+    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    seed_random_appointments()
+    args = _parse_args()
+    seed_random_appointments(args.mode)
