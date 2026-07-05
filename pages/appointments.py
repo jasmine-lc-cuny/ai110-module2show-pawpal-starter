@@ -207,6 +207,7 @@ st.divider()
 visible_appointments = sorted(clinic.appointments, key=lambda a: (a.date, a.time))
 if status_filter != "All":
     visible_appointments = [a for a in visible_appointments if a.status == status_filter]
+visible_appointments = [a for a in visible_appointments if "07:00" <= a.time <= "20:00"]
 
 today = date.today()
 tomorrow = today.fromordinal(today.toordinal() + 1)

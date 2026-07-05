@@ -389,7 +389,7 @@ def render_category_page(
         [
             (pet, task)
             for pet, task in tasks_in_category(owner, category)
-            if task.due_date == today
+            if task.due_date == today and "07:00" <= task.time <= "20:00"
         ]
     )
     title_options = CATEGORY_TASK_TITLES.get(category, [])
