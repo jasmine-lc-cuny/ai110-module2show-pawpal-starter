@@ -11,8 +11,8 @@ verified through `main.py` and pytest before being connected to the UI in
 - A multi-page Streamlit app: a Home landing page with a "Book a Service" picker (Grooming, Sitting, Training, Walking, Veterinary, Special Services), a dedicated "My Pets & Schedule" page for full pet/task management, and one page per service category showing just that category's tasks with a quick-add form.
 - Add an owner, pets, and scheduled care tasks, choosing a task title from a dropdown of common care tasks (or "Other (custom)" for anything else).
 - Edit or delete a pet from the Streamlit UI (deletion disambiguated by species/age/task count so similarly-named pets aren't mixed up).
-- Edit a task's title, time, duration, priority, or frequency; delete a task outright; or reopen one that was marked complete by mistake.
-- Track task time (shown as 12-hour AM/PM), duration, priority, frequency, due date, and completion.
+- Edit a task's title, time, duration, or priority; delete a task outright; or reopen one that was marked complete by mistake. Frequency still exists in the backend for recurring-task logic, but it is hidden from the quick-add form now to keep the UI simpler.
+- Track task time (shown as 12-hour AM/PM), duration, priority, due date, and completion, with frequency retained behind the scenes for recurring tasks.
 - View today's schedule sorted by time and by priority side by side, always both at once.
 - Filter every schedule view by pet and by completion status.
 - Detect exact date/time conflicts and show warnings.

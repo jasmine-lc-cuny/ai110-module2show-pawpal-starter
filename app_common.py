@@ -151,6 +151,14 @@ def _render_dog_cafe_menu_picker() -> str:
     st.caption(items[item_index][2])
     return item_labels[item_index]
 
+
+def _default_task_selection(category: str, title_options: list[str]) -> list[str]:
+    """Pick the most helpful default tasks for a category."""
+    if category == "grooming":
+        preferred = ["Brush Coat", "Wash / Bath", "Trim Nails"]
+        return [title for title in preferred if title in title_options] or title_options[:1]
+    return title_options[:1]
+
 # ==========================================
 # 🏗️ MAIN CATEGORY PAGE BUILDER (THE ENGINE)
 # ==========================================
@@ -275,7 +283,7 @@ def render_category_booking_form(category: str, display_name: str, active_staff,
         selected_titles = st.multiselect(
             "Task(s)",
             title_options,
-            default=title_options[:1],
+            default=_default_task_selection(category, title_options),
             key=f"{category}_title_select",
         )
         st.text_input("Reason", value="—", disabled=True, key=f"{category}_disabled_reason")
